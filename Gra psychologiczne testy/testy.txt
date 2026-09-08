@@ -1,0 +1,551 @@
+       Testy
+
+       Katalog i charakterystyka współczesnych narzędzi diagnostycznych w
+       psychologii
+
+       Poniżej znajduje się wyczerpujące zestawienie wszystkich testów i metod
+       diagnostycznych opisanych w dostarczonych materiałach, podzielone na
+       kategorie ze względu na ich formę i zastosowanie.
+
+       1. Próby zadaniowe (Testy wykonawcze / pomiar zdolności poznawczych)
+
+       Są to testy, w których istnieją poprawne i błędne odpowiedzi, a wynik
+       odzwierciedla obiektywny poziom badanej zdolności "tu i teraz" [1-3].
+
+           SB5 (Skala Inteligencji Stanford-Binet 5) [4, 5]
+
+               Co mierzy / do czego służy: Mierzy inteligencję płynną i skrystalizowaną,
+               pozwala na obliczenie ogólnego ilorazu inteligencji (IQ), werbalnego i
+               niewerbalnego IQ oraz wieku umysłowego [4, 5]. Jest jedynym testem
+               precyzyjnie różnicującym wszystkie stopnie niepełnosprawności
+               intelektualnej [4, 6].
+
+               Jak wygląda: Składa się z 5 skal (rozumowanie płynne, wiedza,
+               rozumowanie ilościowe, przetwarzanie wzrokowo-przestrzenne, pamięć
+               robocza), z których każda dzieli się na część słowną i bezsłowną [4, 5].
+
+Testy                                                                                     1
+           Kogo bada: Osoby w wieku od 2 do 69 lat [4, 5].
+
+       WAIS-R (PL), WISC-R, WISC-V (Skale inteligencji Wechslera) [4, 6-8]
+
+           Co mierzy / do czego służy: Mierzą inteligencję ogólną (skrystalizowaną i
+           płynną) [9]. WISC-V może być stosowany przy diagnozowaniu lekkiej i
+           umiarkowanej niepełnosprawności intelektualnej [4, 6, 7].
+
+           Jak wygląda: Posiadają zadania werbalne (słowne) i niewerbalne
+           (bezsłowne) [9, 10].
+
+           Kogo bada: WAIS-R przeznaczony jest dla dorosłych i starszej młodzieży
+           (16-79 lat), a WISC-R/WISC-V dla dzieci i młodszej młodzieży (6-16 lat) [4,
+           6, 7].
+
+       APIS-Z(R) oraz APIS-P(R) [7, 8]
+
+           Co mierzy / do czego służy: Mierzą inteligencję ogólną (skrystalizowaną i
+           płynną) poprzez badanie 4 typów zdolności: abstrakcyjno-logicznych,
+           werbalnych, wzrokowo-przestrzennych oraz społecznych [7, 8]. Wyniki
+           korelują z ocenami szkolnymi [11].
+
+           Jak wygląda: Bateria zawiera 8 testów (np. synonimy, klasyfikacja, klocki,
+           historyjki) z zadaniami zamkniętymi i otwartymi [8]. Mają formę
+           zeszycików, które badany wypełnia samodzielnie, przypominając szkolne
+           sprawdziany, co pozwala na szybkie badania grupowe [7, 11, 12].
+
+           Kogo bada: APIS-Z dla dorosłych i starszej młodzieży (>17 lat), APIS-P dla
+           młodszej młodzieży (12-16 lat) [7, 10].
+
+       Leiter-3 (Międzynarodowa Wykonaniowa Skala Leitera) [12, 13]
+
+           Co mierzy / do czego służy: Mierzy inteligencję płynną (IQ niewerbalne),
+           pamięć niewerbalną, szybkość przetwarzania oraz wskaźniki rozwojowe
+           [12, 14]. Jest niezwykle czuły na drobne zmiany rozwojowe, regresywne
+           (otępienne) oraz efekty rehabilitacji [12, 14].
+
+           Jak wygląda: Całkowicie niewerbalny test (bez słów, bez obciążeń
+           kulturowych) składający się z baterii poznawczej, baterii uwagi i pamięci
+           (np. test Stroopa) oraz skali obserwacyjnej (np. ocena poziomu
+           aktywności i uwagi) [12-14].
+
+           Kogo bada: Osoby w wieku od 3 do 70+ lat [10, 12, 13].
+
+Testy                                                                                   2
+       TMS (Test Matryc Ravena) [15, 16]
+
+           Co mierzy / do czego służy: Służy do pomiaru wyłącznie inteligencji
+           płynnej [13, 15].
+
+           Jak wygląda: Zadania mają postać niepełnych wzorów (matryc), a osoba
+           badana ma dobrać brakujący fragment [15, 16]. Jest to test niewerbalny
+           [9].
+
+           Kogo bada: Osoby powyżej 6 roku życia [10].
+
+       DSR (Dziecięca Skala Rozwojowa) [11, 15]
+
+           Co mierzy / do czego służy: Mierzy poziom rozwoju, wychwytuje
+           opóźnienia rozwojowe, pozwala ocenić mocne i słabe strony
+           funkcjonowania intelektualnego oraz temperament dziecka [11, 15, 16].
+
+           Jak wygląda: Test ma postać "walizeczki z różnymi rzeczami" do badania
+           przez zabawę. Obejmuje skalę wykonaniową (badanie m.in. manipulacji,
+           percepcji, bazgrania, mowy, pamięci) oraz skalę obserwacyjną (ocena
+           temperamentu: wigor, wrażliwość itp.) [11, 15-17].
+
+           Kogo bada: Małe dzieci (poniżej 3 roku życia) [10, 15].
+
+       WCST (Test Sortowania Kart z Wisconsin) [17, 18]
+
+           Co mierzy / do czego służy: Mierzy funkcje wykonawcze (aktywność
+           nadzorczą, kontrolującą poznawczą aktywność). Stosowany w diagnozie
+           neuropsychologicznej do wykrywania specyficznych deficytów
+           poznawczych [17-19].
+
+           Jak wygląda: Składa się z dwóch talii po 64 karty. Badany dopasowuje
+           karty do wzorców, musząc samodzielnie odkryć regułę sortowania na
+           podstawie informacji zwrotnych badacza (dobrze/źle) [17, 18].
+
+           Kogo bada: Narzędzie ogólne, wykorzystywane w diagnozie
+           neuropsychologicznej [17, 19].
+
+       MMSE / MINIMENTAL (Krótka Skala Oceny Stanu Umysłowego) [17, 19]
+
+           Co mierzy / do czego służy: Kliniczna skala służąca do badań
+           przesiewowych w kierunku procesów otępiennych i dysfunkcji
+           poznawczych oraz monitorowania przebiegu chorób [17, 20].
+
+Testy                                                                              3
+               Jak wygląda: Obejmuje 30 zadań dotyczących m.in. orientacji w czasie i
+               miejscu, zapamiętywania, liczenia, powtarzania, nazywania i rysowania
+               [17, 19]. Posiada zróżnicowane normy [20, 21].
+
+               Kogo bada: Osoby dorosłe zdrowe oraz pacjentów z diagnozami m.in.
+               otępienia, depresji, schizofrenii czy choroby Parkinsona [20, 21].
+
+           TRE (Wykonawczy Test Rozumienia Emocji) [21, 22]
+
+               Co mierzy / do czego służy: Mierzy zdolność rozumienia emocji i wiedzę
+               emocjonalną w oparciu o koncepcję Saloveya i Mayera [21, 22].
+
+               Jak wygląda: 30 zamkniętych zadań opartych na materiale werbalnym (5
+               części o rosnącej trudności), wymagających np. porządkowania słów,
+               szukania przeciwieństw emocji, znajdowania składników emocji złożonych
+               czy przewidywania emocji [21-23].
+
+               Kogo bada: Brak ścisłych ram w źródle, ale złożoność werbalna sugeruje
+               młodzież/dorosłych [22].
+
+           TCT-DP (Rysunkowy Test Twórczego Myślenia) [24]
+
+               Co mierzy / do czego służy: Mierzy twórcze myślenie [24, 25].
+
+               Jak wygląda: Polega na dokończeniu rysunku z wykorzystaniem
+               kwadratowej ramy i elementów graficznych. Oceniany wg 14 kryteriów (np.
+               dodawanie nowych elementów, powiązania tematyczne) [24, 26].
+
+               Kogo bada: Posiada normy głównie dla młodzieży [26].
+
+       2. Metody samoopisowe (Kwestionariusze i inwentarze)
+
+       Narzędzia opierające się na przekonaniach osoby badanej i jej wglądzie w siebie,
+       pozbawione koncepcji "dobrych" czy "złych" odpowiedzi [25, 27, 28].
+
+       Inwentarze i Skale Osobowości:
+
+           MMPI-2 (Minnesocki Wielowymiarowy Inwentarz Osobowości) [29-31]
+
+               Co mierzy / do czego służy: Narzędzie kliniczne oparte na konstrukcji
+               empirycznej. Mierzy szeroko rozumianą patologię osobowości, zaburzenia
+               i cechy kliniczne [30, 31].
+
+               Jak wygląda: Składa się z 567 pytań dychotomicznych (tak/nie)
+               pogrupowanych w 121 skal (kontrolne, kliniczne np. depresja, schizofrenia,
+
+Testy                                                                                      4
+           psychastenia, dodatkowe). Wymaga niezwykle skomplikowanej analizy
+           profilowej ułożenia skal [30-33].
+
+           Kogo bada: Dorośli pacjenci i osoby poddawane ocenie klinicznej [30, 34].
+
+       NEO-FFI / NEO-PI-R [29, 35]
+
+           Co mierzy / do czego służy: Diagnozuje podstawowe cechy osobowości
+           według ujęcia Wielkiej Piątki (neurotyczność, ekstrawersja, otwartość,
+           ugodowość, sumienność) [29, 35].
+
+           Jak wygląda: Kwestionariusz samoopisowy, w którym wersja NEO-PI-R
+           posiada aż 240 itemów mierzących cechy oraz ich składniki [35].
+
+           Kogo bada: Młodzież i dorośli [35].
+
+       EPQ-R / EPQ-R(S) [29, 35]
+
+           Co mierzy / do czego służy: Mierzy cechy osobowości w modelu
+           "Gigantycznej Trójki" Eysencka (neurotyzm, psychotyzm, ekstrawersja)
+           [35, 36].
+
+           Jak wygląda: Posiada m.in. skale kłamstwa (kontrolne) i opiera się na
+           konotacjach biologicznych [36].
+
+           Kogo bada: Dorośli i młodzież [35].
+
+       FCZ-KT(R) (Formalna Charakterystyka Zachowania - Kwestionariusz
+       Temperamentu) [36, 37]
+
+           Co mierzy / do czego służy: Diagnozuje podstawowe, pierwotnie
+           biologicznie uwarunkowane wymiary temperamentu oparte na teorii
+           Strelaua (formalny, a nie treściowy aspekt zachowania) [36, 37].
+
+           Jak wygląda: Składa się ze 100 pozycji z 4-stopniową skalą ocen. Zawiera
+           7 skal: Żwawość, Perseweratywność, Wrażliwość sensoryczna,
+           Wytrzymałość, Reaktywność emocjonalna, Aktywność i Rytmiczność [37,
+           38].
+
+           Kogo bada: Młodzież od 15 roku życia i dorośli (indywidualnie lub
+           grupowo) [38].
+
+       ACL (Lista Przymiotników Gougha) [38, 39]
+
+Testy                                                                                 5
+               Co mierzy / do czego służy: Do badania różnych cech osobowościowych,
+               struktury Ja (realne, idealne), stereotypów, czy potrzeb [38-40]. Posiada
+               37 skal (m.in. potrzeb, tematyczne, analizy transakcyjnej, kontrolne) [39,
+               40].
+
+               Jak wygląda: Badany wybiera spośród 300 przymiotników te, które go
+               opisują (można modyfikować instrukcję) [38, 39].
+
+               Kogo bada: Dorośli/młodzież [38].
+
+           STAI (Inwentarz Stanu i Cechy Lęku) [37, 41]
+
+               Co mierzy / do czego służy: Pozwala ocenić i rozróżnić lęk dyspozycyjny
+               (stałą cechę osobowości) od lęku reaktywnego (związanego z sytuacją "tu
+               i teraz") [37, 41].
+
+               Jak wygląda: Dwie części oceniające stan ("jak się czujesz teraz") i cechę
+               ("jak się zazwyczaj czujesz") [41].
+
+               Kogo bada: Dzieci (wersja STAI-C), młodzież i dorośli, osoby zdrowe i
+               chore (także np. do prognozy wojskowych) [41].
+
+       Skale Samooceny, Postaw i Adaptacji:
+
+           SES (Skala Samooceny Rosenberga) [32, 42]
+
+               Co mierzy / do czego służy: Mierzy świadomą, globalną samoocenę
+               traktowaną jako względnie stabilną cechę [32, 42].
+
+               Jak wygląda: Narzędzie jednowymiarowe zawierające 10 itemów [32, 43].
+
+               Kogo bada: Populacja ogólna [43].
+
+           MSEI (Wielowymiarowy Kwestionariusz Samooceny) [32, 44]
+
+               Co mierzy / do czego służy: Mierzy różne, szczegółowe składowe
+               samooceny i poczucia własnej wartości [32, 44].
+
+               Jak wygląda: Posiada 116 pozycji testowych, w tym 11 skal (m.in.
+               kompetencje, bycie kochanym, witalność, atrakcyjność fizyczna,
+               samokontrola) i wbudowane skale kontrolne (np. potrzeba aprobaty) [32,
+               35, 44].
+
+               Kogo bada: Populacja ogólna [44].
+
+Testy                                                                                      6
+       CISS (Kwestionariusz Radzenia Sobie w Sytuacjach Stresowych) [45, 46]
+
+           Co mierzy / do czego służy: Wyróżnia i mierzy preferencje do stosowania
+           trzech głównych stylów radzenia sobie w stresie (na zadaniu, na
+           emocjach, unikaniu) [45, 47].
+
+           Jak wygląda: 48 stwierdzeń z 5-stopniową skalą odpowiedzi [46].
+
+           Kogo bada: Dorośli / młodzież [46].
+
+       LOT-R (Test Orientacji Życiowej) [45, 48]
+
+           Co mierzy / do czego służy: Mierzy dyspozycyjny optymizm lub
+           pesymizm [45, 48].
+
+           Jak wygląda: 10 twierdzeń z 5-stopniową skalą (np. "Ogólnie oczekuję, że
+           przydarzy mi się więcej dobrego niż złego") [48].
+
+           Kogo bada: Osoby zdrowe i chore [48].
+
+       SWLS (Skala Satysfakcji z Życia) [45, 49]
+
+           Co mierzy / do czego służy: Mierzy ogólną jakość życia odniesioną do
+           wybranych przez osobę badaną, subiektywnych kryteriów [45, 49].
+
+           Jak wygląda: 5 itemów (np. "Gdybym mógł jeszcze raz przeżyć swoje
+           życie...") [49].
+
+           Kogo bada: Osoby zdrowe i chore [49].
+
+       GSES (Skala Uogólnionej Własnej Skuteczności) [45, 49]
+
+           Co mierzy / do czego służy: Bada siłę ogólnego przekonania jednostki o
+           skuteczności radzenia sobie z trudnymi sytuacjami w oparciu o teorię
+           Bandury [45, 49].
+
+           Jak wygląda: 10 itemów (np. "Jestem pewny, że skutecznie stawiłbym
+           czoła...") [50].
+
+           Kogo bada: Dorosłe osoby zdrowe i chore (normy dla 7 grup klinicznych,
+           np. po zawale, SM, diabetycy) [49, 50].
+
+       PK (Kwestionariusz Pozytywności) [51]
+
+           Co mierzy / do czego służy: Mierzy pozytywne ustosunkowanie do siebie,
+           świata i przyszłości [51].
+
+Testy                                                                                7
+               Jak wygląda: Samoopisowa skala postaw [51].
+
+               Kogo bada: Populacja ogólna [51].
+
+           RVS (Skala Wartości Rokeacha) [50, 52]
+
+               Co mierzy / do czego służy: Narzędzie oceny postaw, służące do
+               porównywania hierarchii wartości (instrumentalnych i ostatecznych)
+               jednostki na tle grup lub między partnerami [50, 52].
+
+               Jak wygląda: Rangowa skala pomiarowa polegająca na fizycznym
+               porządkowaniu przez osobę badaną wartości pod względem ich ważności
+               (nie liczy się tu wyników w klasyczny, znormalizowany sposób ilościowy)
+               [50, 52].
+
+               Kogo bada: Populacja ogólna [50].
+
+       Inwentarze i Skale Kompetencji oraz Relacji:
+
+           WKP (Wielowymiarowy Kwestionariusz Preferencji) [41, 53]
+
+               Co mierzy / do czego służy: Test zainteresowań zawodowych, badający
+               rodzaj preferowanych czynności (np. biologiczne, kierownicze) oraz
+               warunków pracy [53, 54]. Jego wynikiem jest sugestia konkretnych
+               zawodów [53, 54].
+
+               Jak wygląda: Składa się ze 133 stwierdzeń [54].
+
+               Kogo bada: Młodzież i dorośli (szczególnie w doradztwie zawodowym)
+               [46].
+
+           PROKOS / KKS (Profil Kompetencji Społecznych) [55]
+
+               Co mierzy / do czego służy: Służy do samopomiaru kompetencji
+               społecznych: asertywnych, kooperacyjnych, towarzyskich,
+               społecznikowskich oraz zaradności [56, 57].
+
+               Jak wygląda: 90 itemów (60 diagnostycznych, 30 buforowych)
+               ocenianych na 4-stopniowej skali pod kątem tego, na ile osoba "czuje się"
+               kompetentna radząc sobie z danym zadaniem [55, 57].
+
+               Kogo bada: Młodzież, dorośli [57].
+
+           INTE (Kwestionariusz Inteligencji Emocjonalnej) [57]
+
+Testy                                                                                     8
+               Co mierzy / do czego służy: Mierzy efektywność przetwarzania informacji
+               dot. emocji własnych i cudzych (wykorzystywanie emocji, rozpoznawanie
+               ich) w oparciu o samoopis (na bazie teorii Saloveya i Mayera) [22, 58].
+
+               Jak wygląda: 33 itemy wyliczające 3 wskaźniki [58].
+
+               Kogo bada: Populacja ogólna [58].
+
+           KRR (Kwestionariusz Relacji Rodzinnych) [47]
+
+               Co mierzy / do czego służy: Narzędzie przeznaczone do badania relacji
+               rodzinnych i tego, jak nastolatek postrzega związek rodziców, relacje z
+               matką/ojcem oraz jak wyobraża sobie ich ocenę własnej osoby [47].
+
+               Jak wygląda: Składa się z wielu arkuszy [59].
+
+               Kogo bada: Młodzież w wieku 15-20 lat [47].
+
+           KKM (Kwestionariusz Komunikacji Małżeńskiej) [59]
+
+               Co mierzy / do czego służy: Bada zachowania komunikacyjne w
+               małżeństwie [59].
+
+               Jak wygląda: Dwie wersje po 30 pozycji do wzajemnej oceny zachowań
+               własnych i partnera na wymiarach: wsparcie, zaangażowanie i deprecjacja
+               [59].
+
+               Kogo bada: Pary małżeńskie [59].
+
+       3. Techniki Projekcyjne i Półprojekcyjne
+
+       Metody wywodzące się z paradygmatu psychodynamicznego, bazujące na
+       nieustrukturyzowanym materiale. Omijają świadome mechanizmy obronne w celu
+       dotarcia do nieświadomych procesów, konfliktów czy tłumionych potrzeb [53, 60].
+
+           RISB (Test Zdań Niedokończonych Rottera) [61, 62]
+
+               Co mierzy / do czego służy: Metoda półprojekcyjna. Służy do omijania
+               silnych mechanizmów obronnych, diagnozy konfliktów i obliczenia
+               Wskaźnika Ogólnego Przystosowania (WOP) poprzez analizę ilościową i
+               bardzo istotną analizę jakościową (np. opuszczenia, poprawki) [61-65].
+
+               Jak wygląda: Najmocniej ustrukturalizowany test z tej grupy, w którym
+               badany musi swobodnie dokończyć rozpoczęte zdania [61, 62].
+
+Testy                                                                                   9
+           Kogo bada: Istnieją wersje dla dzieci, młodzieży, studentów i dorosłych
+           [64].
+
+       TAT (Test Apercepcji Tematycznej) [63, 66]
+
+           Co mierzy / do czego służy: Bada system osobistej narracji, potrzeb
+           (teoria Murraya), funkcjonowania mechanizmów obronnych, ego czy
+           superego [63, 67].
+
+           Jak wygląda: Częściowo ustrukturalizowany – zawiera 30 tablic (w
+           badaniu podaje się zwykle 10) ze stymulującymi, niejednoznacznymi
+           scenami z postaciami. Badany musi ułożyć dramatyczną historię do
+           obrazka (określając przeszłość, uczucia bohaterów i finał) [63, 68, 69].
+
+           Kogo bada: Dorośli [69].
+
+       CAT-A / CAT-H / CAT-S (Test Apercepcji Tematycznej dla dzieci) [63, 66]
+
+           Co mierzy / do czego służy: Tożsamy cel co w TAT, lecz diagnozuje
+           konflikty charakterystyczne dla wieku dziecięcego [69].
+
+           Jak wygląda: Wykorzystuje tablice przedstawiające zwierzęta (-A) bądź
+           ludzi (-H) [66].
+
+           Kogo bada: Dzieci [63, 66].
+
+       Test Rorschacha [68, 69]
+
+           Co mierzy / do czego służy: Służy do głębokiej diagnozy osobowości,
+           problemów emocjonalnych i psychopatologii [69].
+
+           Jak wygląda: Całkowicie nieustrukturyzowany materiał w postaci 10
+           plansz z plamami atramentowymi, polegający na pytaniu "co by to mogło
+           być?" i skomplikowanym wyliczaniu wskaźników interpretacyjnych [68,
+           70].
+
+           Kogo bada: Dorośli/dzieci. Test wymaga ogromnego doświadczenia
+           klinicznego [68, 70].
+
+       Test Rysunku Rodziny (i grupa testów "Narysuj...") [71, 72]
+
+           Co mierzy / do czego służy: Diagnoza relacji i konfliktów w rodzinie.
+           Współcześnie zaleca się interpretować je wyłącznie całościowo, a nie na
+           bazie pojedynczych oznak/kresek [71-73].
+
+Testy                                                                                10
+               Jak wygląda: Biała kartka A4, kredki [72].
+
+               Kogo bada: Najczęściej dzieci i rodziny [72].
+
+           Test Drzewa [66, 71]
+
+               Co mierzy / do czego służy: Diagnoza osobowości i psychopatologii (choć
+               metoda nie spełnia rygorystycznych wymogów psychometrycznych) [66,
+               71].
+
+               Jak wygląda: Badany dostaje kartkę i ołówek z prośbą "narysuj drzewo
+               owocowe" [66].
+
+               Kogo bada: Populacja ogólna [66].
+
+           TSR (Test Stosunków Rodzinnych) [74]
+
+               Co mierzy / do czego służy: Pozwala badać emocje dziecka wobec
+               członków rodziny, w tym te ukryte, do których brakuje mu wglądu i
+               możliwości werbalizacji [74].
+
+               Jak wygląda: Łączy test psychometryczny z techniką projekcyjną.
+               Dziecko wrzuca karteczki z opisami emocji i zachowań do pudełek
+               przypisanych podczas wywiadu konkretnym członkom rodziny (lub do
+               pudełka "nikt") [55, 74].
+
+               Kogo bada: Dzieci (istnieje też wersja diagnozująca emocje między
+               małżonkami) [55, 74].
+
+       4. Metody Systemowe i Wywiady Ustrukturalizowane
+
+           Wywiady Standaryzowane (SCID, DIS, SCAN, CIDI, DISCO, SIRS) [75-78]
+
+               Co mierzą / do czego służą: Bardzo rygorystyczne wywiady, w których
+               diagnozuje się konkretne zaburzenia psychiczne wg DSM/ICD (np. autyzm
+               - DISCO, symulowanie zaburzeń - SIRS) [76, 78].
+
+               Jak wyglądają: Przypominają "odczytywanie kwestionariusza", pytania są
+               ułożone z góry, odpowiedzi podlegają sztywnemu kodowaniu (np.
+               drzewka decyzyjne) [75, 77, 79].
+
+               Kogo badają: Osoby podejrzewane o konkretne zaburzenia kliniczne [76].
+
+           Techniki Socjometryczne (np. klasyczne Moreno, metoda 360 stopni) [9, 80,
+           81]
+
+Testy                                                                                   11
+               Co mierzy / do czego służy: Służą do diagnozy systemu jako całości.
+               Mierzą relacje i jakość komunikacji między członkami organizacji [80, 81].
+
+               Jak wygląda: Osoby badane dokonują wyborów (pozytywnych lub
+               negatywnych) spośród innych członków grupy ze względu na konkretne
+               kryterium postawione przez badacza [81].
+
+               Kogo bada: Grupy, np. w szkole, w miejscu pracy, na oddziałach w firmie
+               [80, 81].
+
+       5. Inne Metody Diagnozy (Niestandardowe)
+
+           Technika Q-sort / Metodologia Q [82, 83]
+
+               Co mierzy / do czego służy: Służy do wiernego opisu pomiaru "Ja"
+               (realnego, idealnego), postrzegania swoich partnerów czy środowiska
+               [84].
+
+               Jak wygląda: Wymusza na badanym fizyczne posortowanie dużej puli
+               kartoników (lub zadań na komputerze) ze stwierdzeniami na przymusowej
+               osi tworzącej wymuszony rozkład normalny [82, 83]. Uniemożliwia ciągłe
+               unikanie i uciekanie w neutralne, środkowe odpowiedzi [84].
+
+               Kogo bada: Populacja ogólna [84].
+
+           Metoda Konfrontacji z Sobą Hermansa (MKS / MKS 2000) [80, 85]
+
+               Co mierzy / do czego służy: Zaawansowana technika z grupy
+               macierzowych, dająca głęboki wgląd i służąca jako wsparcie w
+               psychoterapii i poradnictwie [85, 86].
+
+               Jak wygląda: Sam badany w toku rozmowy generuje zbiór ważnych dla
+               niego pojęć/wspomnień (tzw. wartościowań), a następnie musi przypisać
+               każdej z tych poszczególnych pozycji punkty odzwierciedlające nasilenie
+               24 różnych rodzajów emocji krzyżowo odczuwanych na myśl o tym
+               wydarzeniu [80, 86].
+
+               Kogo bada: Młodzież i dorośli (szczególnie w toku psychoterapii
+               narracyjnej) [86].
+
+       6. Narzędzia Zdyskredytowane
+
+Testy                                                                                      12
+       W źródłach [76, 87-89] wylistowano również narzędzia, które w świetle diagnozy
+       opartej na dowodach empirycznych (EBA) zostały zdyskredytowane w
+       profesjonalnej diagnozie indywidualnej z racji braku rzetelności, trafności lub
+       oparcia na błędnych założeniach. Należą do nich:
+
+           Test Kolorów Lüschera, Test Szondiego, oraz Grafologiczna analiza
+           pisma (do oceny osobowości).
+
+           Wzrokowo-Motoryczny Test Gestalt Lauretty Bender (jako test do diagnozy
+           osobowości lub uszkodzeń neuropsychologicznych; dopuszczalny tylko jako
+           test koordynacji wzrokowo-ruchowej).
+
+           Obrazkowy test z psem Blacky, Rysunek postaci ludzkiej, Rysunek Dom-
+           Drzewo-Człowiek (nie należy przypisywać ukrytych cech psychologicznych
+           do konkretnych oznak rysunku, o ile nie stosuje się oceny całościowej).
+
+           Technika "Enneagram" (w diagnostyce osobowości).
+
+Testy                                                                                   13
+

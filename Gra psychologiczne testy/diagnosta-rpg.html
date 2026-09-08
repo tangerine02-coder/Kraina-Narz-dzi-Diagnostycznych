@@ -1,0 +1,2479 @@
+<title>Kraina Narzędzi Diagnostycznych</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ink:#0d0e14; --ink2:#161826; --ink3:#1e2133; --line:#2b2f45;
+  --paper:#e9e7e0; --muted:#8f93ab; --dim:#5c6178;
+  --c1:#4cc9f0; --c2:#ffb703; --c3:#b388ff; --c4:#43d9a3; --c5:#ff6b9d; --c6:#98a1b4;
+  --ok:#4ade80; --bad:#ff5d5d; --gold:#ffd166;
+  --ts:40px;
+  --disp:"Bricolage Grotesque","Trebuchet MS",sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono","Consolas",monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--ink);color:var(--paper);font-family:var(--body);
+  margin:0;padding:6px 6px 14px;display:flex;justify-content:center;align-items:flex-start;
+  -webkit-text-size-adjust:100%;overflow-x:hidden}
+#app{width:100%;max-width:430px;display:flex;flex-direction:column;gap:8px;position:relative}
+#mapa{display:flex;flex-direction:column;gap:8px;min-width:0}
+#bokInfo{display:none}                 /* tylko uklad komputerowy */
+
+/* ---------- HUD ---------- */
+#hud{background:var(--ink2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;
+  display:flex;flex-direction:column;gap:7px}
+.hrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rank{font-family:var(--disp);font-weight:800;font-size:15px;letter-spacing:-.2px;line-height:1}
+.rank small{display:block;font-family:var(--mono);font-weight:500;font-size:9px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-top:3px}
+.stats{margin-left:auto;display:flex;gap:10px;font-family:var(--mono);font-size:12px;
+  font-variant-numeric:tabular-nums;font-weight:600}
+.stats b{font-weight:600}
+#xp{color:var(--gold)} #streak{color:var(--c5)} #acc{color:var(--c1)}
+.bar{height:5px;background:var(--ink3);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--c1),var(--gold));
+  width:0;transition:width .35s ease}
+#regionTag{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;
+  padding:3px 8px;border-radius:99px;border:1px solid currentColor}
+#progTxt{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto;
+  font-variant-numeric:tabular-nums}
+.tools{display:flex;gap:5px}
+.tbtn{flex:1;background:var(--ink3);border:1px solid var(--line);color:var(--paper);
+  font-family:var(--mono);font-size:10.5px;font-weight:600;padding:7px 4px;border-radius:7px;
+  cursor:pointer;letter-spacing:.02em}
+.tbtn:active{background:var(--line)}
+.tbtn:disabled{color:var(--dim);cursor:default}
+.tbtn b{color:var(--bad)}
+.tbtn:focus-visible,button:focus-visible{outline:2px solid var(--c1);outline-offset:2px}
+
+/* ---------- MAPA ---------- */
+#viewport{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:10px;
+  background:var(--ink2);margin:0 auto;touch-action:none}
+#world{position:absolute;left:0;top:0;transition:transform .16s ease-out}
+.tile{position:absolute;width:var(--ts);height:var(--ts);display:flex;align-items:center;
+  justify-content:center;font-family:var(--mono);font-weight:700;overflow:hidden}
+.floor{background:var(--tint);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.045)}
+.wall{background:#090a10;box-shadow:inset 0 0 0 1px #000}
+.wall::after{content:"";width:60%;height:2px;background:var(--line);border-radius:2px}
+.gate{background:var(--tint)}
+.gate::after{content:"⛓";font-size:calc(var(--ts)*.5);color:var(--dim)}
+.gate.open::after{content:"";width:70%;height:3px;background:var(--hue);border-radius:2px;opacity:.5}
+.st{cursor:default}
+.st .code{font-size:calc(var(--ts)*.26);white-space:pre-line;line-height:1;color:var(--hue);text-align:center;
+  padding:1px;letter-spacing:-.03em;word-break:break-word}
+.st .plate{position:absolute;inset:11%;border:1.5px solid var(--hue);border-radius:5px;
+  background:color-mix(in srgb,var(--hue) 12%,transparent)}
+.st.done .plate{border-color:var(--dim);background:transparent}
+.st.done .code{color:transparent}
+.st.done::after{content:"✓";position:absolute;font-size:calc(var(--ts)*.42);color:var(--ok);opacity:.85}
+.boss{position:relative}
+.boss::after{content:"👹";font-size:calc(var(--ts)*.6);filter:grayscale(1) brightness(.45)}
+.boss.awake::after{filter:none}
+.boss.awake .plate{position:absolute;inset:8%;border:2px solid var(--bad);border-radius:6px}
+.boss.slain::after{content:"🏅";filter:none}
+.trophy::after{content:"🏆";font-size:calc(var(--ts)*.6);filter:grayscale(1) brightness(.5)}
+.trophy.lit::after{filter:none}
+#hero{position:absolute;width:var(--ts);height:var(--ts);display:flex;align-items:center;
+  justify-content:center;font-size:calc(var(--ts)*.62);transition:transform .16s ease-out;
+  z-index:3;text-shadow:0 2px 6px #000}
+/* podskok musi siedziec na osobnym elemencie: animacja transformu bije styl inline,
+   wiec animowanie #hero kasowalo jego pozycje i wyrzucalo postac w rog mapy */
+#sprite{display:block;line-height:1}
+#sprite.step{animation:hop .18s ease}
+@keyframes hop{50%{transform:translateY(-14%) scale(1.12)}}
+
+/* ---------- D-PAD ---------- */
+#pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:250px;margin:2px auto 0}
+.dp{background:var(--ink2);border:1px solid var(--line);border-radius:12px;color:var(--paper);
+  font-size:22px;height:56px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.dp:active{background:var(--c1);color:var(--ink);border-color:var(--c1)}
+.spacer{visibility:hidden}
+#legend{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;
+  letter-spacing:.03em;line-height:1.5}
+
+/* ---------- MODAL ---------- */
+/* zakotwiczone do #app, nie do okna: w wysokim oknie (artefakt na komputerze)
+   position:fixed zsuwał panel setki pikseli pod mapę, poza pole widzenia */
+#veil{position:absolute;inset:0;background:rgba(6,7,12,.86);display:none;align-items:flex-end;
+  justify-content:center;z-index:40;padding:8px}
+#veil.on{display:flex}
+#modal{width:100%;max-width:430px;max-height:100%;overflow-y:auto;background:var(--ink2);
+  border:1px solid var(--line);border-top:3px solid var(--hue,var(--c1));border-radius:12px;
+  padding:14px;animation:rise .2s ease}
+@keyframes rise{from{transform:translateY(18px);opacity:0}}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--hue,var(--c1));font-weight:600}
+h2{font-family:var(--disp);font-weight:800;font-size:19px;margin:5px 0 2px;line-height:1.15;
+  text-wrap:balance;letter-spacing:-.3px}
+.sub{font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.45}
+.qtext{font-size:15px;line-height:1.5;margin:0 0 11px;text-wrap:pretty}
+.opts{display:flex;flex-direction:column;gap:7px}
+.opt{display:flex;gap:9px;align-items:flex-start;text-align:left;width:100%;
+  background:var(--ink3);border:1px solid var(--line);color:var(--paper);border-radius:9px;
+  padding:11px 11px;font-family:var(--body);font-size:13.5px;line-height:1.4;cursor:pointer}
+.opt:active{border-color:var(--hue,var(--c1))}
+.opt.sel{border-color:var(--hue,var(--c1));box-shadow:0 0 0 1px var(--hue,var(--c1));
+  background:color-mix(in srgb,var(--hue,var(--c1)) 14%,var(--ink3))}
+.klaw{display:none;font-family:var(--mono);font-size:11px;color:var(--dim);
+  margin-top:9px;letter-spacing:.03em;text-align:center}
+.opt .k{font-family:var(--mono);font-weight:700;color:var(--muted);flex:none}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--ink3))}
+.opt.right .k{color:var(--ok)}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--ink3))}
+.opt.wrong .k{color:var(--bad)}
+.wpis{width:100%;background:var(--ink3);border:1px solid var(--line);color:var(--paper);
+  font-family:var(--body);font-size:16px;padding:13px 12px;border-radius:9px;margin-bottom:8px}
+.wpis::placeholder{color:var(--dim)}
+.wpis:focus{outline:2px solid var(--hue,var(--c1));outline-offset:1px}
+.wpis.dobrze{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--ink3));opacity:1}
+.wpis.zle{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--ink3));opacity:1}
+.wpis:disabled{-webkit-text-fill-color:var(--paper);color:var(--paper)}
+.opt[disabled]{cursor:default;opacity:.75}
+.opt.right[disabled],.opt.wrong[disabled]{opacity:1}
+#fb{margin-top:12px;display:none;flex-direction:column;gap:9px;animation:rise .18s ease}
+#fb.on{display:flex}
+.verdict{font-family:var(--disp);font-weight:800;font-size:16px}
+.verdict.g{color:var(--ok)} .verdict.b{color:var(--bad)}
+.why{font-size:13px;line-height:1.5;color:var(--paper);margin:0}
+.hook{font-size:12.5px;line-height:1.45;background:var(--ink3);border-left:3px solid var(--c5);
+  padding:8px 10px;border-radius:0 7px 7px 0;color:#f0d9e4;margin:0}
+.hook b{color:var(--c5);font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  display:block;text-transform:uppercase;margin-bottom:3px}
+.exam{font-family:var(--mono);font-size:12.5px;line-height:1.5;background:#101322;
+  border:1px dashed var(--c1);border-radius:7px;padding:9px 10px;color:#cfe9f5}
+.exam span{color:var(--dim)}
+.next{width:100%;background:var(--hue,var(--c1));border:0;color:#0b0d14;font-family:var(--disp);
+  font-weight:800;font-size:15px;padding:12px;border-radius:9px;cursor:pointer;letter-spacing:-.1px}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);font-family:var(--mono);
+  font-size:12px;padding:10px;border-radius:9px;width:100%;cursor:pointer;margin-top:7px}
+.lives{font-size:18px;letter-spacing:3px}
+.card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 11px;font-size:13px;line-height:1.45}
+.card dt{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);padding-top:3px}
+.card dd{margin:0}
+.card dd.trap{color:var(--gold)}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.badge{font-family:var(--mono);font-size:10.5px;padding:5px 8px;border-radius:99px;
+  border:1px solid var(--line);color:var(--dim)}
+.badge.got{border-color:var(--gold);color:var(--gold)}
+.tot{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.7}
+.tot b{color:var(--paper);font-variant-numeric:tabular-nums}
+.idx{display:flex;flex-direction:column;gap:3px;margin-top:8px}
+.idxr{display:flex;gap:8px;align-items:center;font-size:12.5px;padding:6px 8px;border-radius:7px;
+  background:var(--ink3);border:0;color:var(--paper);text-align:left;cursor:pointer;width:100%}
+.idxr code{font-family:var(--mono);font-weight:700;font-size:11.5px;color:var(--hue);flex:none;width:74px}
+.idxr span{color:var(--muted);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.idxr.locked{opacity:.4;cursor:default}
+.rgroup{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--hue);margin:10px 0 2px}
+/* ---------- WERSJA NA DUZY EKRAN ---------- */
+@media (min-width:900px){
+  /* Uklad komputerowy: mapa w lewej kolumnie, HUD i panel z pytaniem w prawej.
+     Panel przestaje byc nakladka - siada w kolumnie obok, wiec mapa jest caly czas widoczna. */
+  body{min-height:100vh;padding:10px}
+  /* panel rosnie z oknem: w kolumnie mapy i tak zostaje zapas, bo kafelek
+     ogranicza wysokosc okna, nie szerokosc */
+  #app{max-width:none;width:100%;margin:0;display:grid;gap:16px;
+       grid-template-columns:minmax(0,1fr) clamp(440px, 32vw, 700px);
+       grid-template-rows:auto minmax(0,1fr);align-items:start}
+  #mapa{grid-column:1;grid-row:1 / span 2;gap:10px}
+  #hud{grid-column:2;grid-row:1}
+  #bokInfo{grid-column:2;grid-row:2;display:block;background:var(--ink2);border:1px solid var(--line);
+           border-radius:12px;padding:20px 22px}
+  #bokInfo .sub{margin:6px 0 14px}
+  #app.panel #bokInfo{display:none}               /* panel otwarty zastepuje podpowiedz */
+  #veil{position:static;grid-column:2;grid-row:2;background:none;padding:0;
+        align-items:stretch;justify-content:stretch}
+  /* dlugie ekrany (Kodeks) przewijaja sie w panelu, zamiast wypychac strone i zabierac mape z pola widzenia.
+     --modalMax liczy layout() z faktycznej pozycji HUD, wiec nie rozjedzie sie po zmianie typografii */
+  #modal{max-width:none;width:100%;max-height:var(--modalMax, calc(100vh - 280px))}
+  #hud{padding:16px 20px;gap:12px}
+  .rank{font-size:24px}
+  .rank small{font-size:11.5px;margin-top:6px}
+  .stats{font-size:18px;gap:18px}
+  .bar{height:8px}
+  #regionTag{font-size:14px;padding:5px 13px}
+  #progTxt{font-size:14px}
+  .tools{gap:9px}
+  .tbtn{font-size:14px;padding:13px 8px;border-radius:10px}
+  #pad{max-width:320px;gap:8px}
+  .dp{height:54px;font-size:25px}
+  #legend{font-size:12px}
+  #modal{padding:26px 28px;border-radius:16px}
+  .eyebrow{font-size:12.5px}
+  h2{font-size:31px;margin:8px 0 4px}
+  .sub{font-size:15.5px;margin-bottom:18px}
+  .qtext{font-size:21px;margin-bottom:17px;line-height:1.45}
+  .opts{gap:10px}
+  .opt{font-size:17.5px;padding:16px 17px;border-radius:12px}
+  .verdict{font-size:22px}
+  .why{font-size:16px}
+  .hook{font-size:15.5px;padding:13px 15px}
+  .exam{font-size:15.5px;padding:13px 15px}
+  .next{font-size:18px;padding:16px;border-radius:12px}
+  .ghost{font-size:14.5px;padding:13px}
+  .wpis{font-size:18px;padding:15px 14px}
+  .card dl{font-size:16px;gap:10px 16px}
+  .card dt{font-size:11px}
+  .lives{font-size:24px}
+  .badge{font-size:12.5px;padding:6px 11px}
+  .idxr{font-size:14px;padding:8px 11px}
+  .klaw{display:block;font-size:12px}
+  .idxr code{font-size:13px;width:92px}
+  .idxr span{font-size:13px}
+  .rgroup{font-size:11.5px}
+  .tot{font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app">
+  <div id="hud">
+    <div class="hrow">
+      <div class="rank"><span id="rank">Praktykant</span><small id="rankNext">do Asystenta: 200 XP</small></div>
+      <div class="stats"><b id="xp">⭐0</b><b id="streak">🔥0</b><b id="acc">🎯—</b></div>
+    </div>
+    <div class="bar"><i id="barI"></i></div>
+    <div class="hrow">
+      <span id="regionTag">🧠 Próby Zadaniowe</span>
+      <span id="progTxt">0/10 stacji</span>
+    </div>
+    <div class="tools">
+      <button class="tbtn" id="btnRep">🔁 Powtórka <b id="repN">0</b></button>
+      <button class="tbtn" id="btnTxt">⌨️ Wpisz</button>
+      <button class="tbtn" id="btnPair">⚖️ Pary</button>
+      <button class="tbtn" id="btnIdx">📖 Kodeks</button>
+    </div>
+  </div>
+
+  <div id="mapa">
+    <div id="viewport"><div id="world"></div><div id="hero"><span id="sprite">🧑‍🎓</span></div></div>
+
+    <div id="pad">
+      <div class="spacer"></div><button class="dp" data-d="u" aria-label="w górę">▲</button><div class="spacer"></div>
+      <button class="dp" data-d="l" aria-label="w lewo">◀</button>
+      <button class="dp" data-d="d" aria-label="w dół">▼</button>
+      <button class="dp" data-d="r" aria-label="w prawo">▶</button>
+    </div>
+    <div id="legend">D-pad kciukiem lub strzałki (kliknij najpierw mapę) · wejdź na kafelek z akronimem</div>
+  </div>
+
+  <div id="bokInfo">
+    <div class="eyebrow">panel boczny</div>
+    <p class="sub">Wejdź postacią na kafelek z akronimem — pytanie otworzy się tutaj, bez zasłaniania mapy.</p>
+    <div class="tot">↑ ↓ ← → chodzenie<br>Enter zatwierdza<br>Esc zamyka panel</div>
+  </div>
+
+  <div id="veil"><div id="modal"></div></div>
+</div>
+
+<script>
+/* =========================================================
+   DANE - wszystkie liczby, skale i przedzialy wieku
+   pochodza wylacznie z pliku "Testy.pdf".
+   q: {t:tresc, a:[3 opcje], c:index poprawnej, why, hook, ex, g}
+   g: 'n'=liczbowe | 'w'=wiek/kogo bada | 's'=skale/budowa
+   ========================================================= */
+const REGIONS = [
+{
+ id:"zad", emoji:"🧠", name:"Kraina Prób Zadaniowych", hue:"var(--c1)", tint:"#12202b",
+ intro:"Testy, w których istnieją poprawne i błędne odpowiedzi. Wynik odzwierciedla obiektywny poziom zdolności „tu i teraz”.",
+ boss:{name:"Strażnik Ilorazu", badge:"🏅 Pogromca Ilorazu"},
+ stations:[
+ {code:"SB5", full:"Skala Inteligencji Stanford-Binet 5",
+  card:{mierzy:"Inteligencję płynną i skrystalizowaną; daje IQ ogólne, werbalne i niewerbalne oraz wiek umysłowy.",
+        budowa:"5 skal: rozumowanie płynne, wiedza, rozumowanie ilościowe, przetwarzanie wzrokowo-przestrzenne, pamięć robocza — każda dzieli się na część słowną i bezsłowną.",
+        kto:"Osoby w wieku 2–69 lat.",
+        hak:"JEDYNY test precyzyjnie różnicujący WSZYSTKIE stopnie niepełnosprawności intelektualnej (Wechsler dochodzi tylko do umiarkowanej)."},
+  q:[
+   {t:"Ile skal ma SB5?", a:["5","8","4"], c:0, g:"n",
+    why:"SB5 ma 5 skal, każda dzieli się na część słowną i bezsłowną. 8 to liczba testów w baterii APIS, a 4 to liczba typów zdolności mierzonych przez APIS.",
+    hook:"Piątka w nazwie, piątka skal — Stanford-Binet 5 nie kłamie.",
+    ex:"Pięć skal, każda słowna i bezsłowna."},
+   {t:"Kogo bada SB5?", a:["Osoby w wieku 2–69 lat","Osoby w wieku 3–70+ lat","Dzieci i młodzież 6–16 lat"], c:0, g:"w",
+    why:"SB5: 2–69 lat. Przedział 3–70+ należy do Leiter-3, a 6–16 lat do WISC-R/WISC-V.",
+    hook:"Binet bierze dwulatka i odprowadza go na emeryturę (69).",
+    ex:"Osoby w wieku 2–69 lat."},
+   {t:"Który test jako jedyny precyzyjnie różnicuje wszystkie stopnie niepełnosprawności intelektualnej?", a:["SB5","WISC-V","TMS (Raven)"], c:0, g:"",
+    why:"To sztandarowy haczyk. WISC-V stosuje się przy lekkiej i umiarkowanej niepełnosprawności, a TMS mierzy tylko inteligencję płynną.",
+    hook:"Binet stopniuje wszystko: od lekkiej po głęboką. Wechsler wysiada na „umiarkowanej”.",
+    ex:"SB5 — różnicuje wszystkie stopnie niepełnosprawności."},
+   {t:"Które skale wchodzą w skład SB5?", a:["Rozumowanie płynne, wiedza, rozumowanie ilościowe, przetwarzanie wzrokowo-przestrzenne, pamięć robocza","Żwawość, perseweratywność, wrażliwość sensoryczna, wytrzymałość, reaktywność emocjonalna","Bateria poznawcza, bateria uwagi i pamięci, skala obserwacyjna"], c:0, g:"s",
+    why:"Odpowiedź b) wylicza skale temperamentu FCZ-KT(R), a c) to trzy części Leiter-3.",
+    hook:"Płynność, wiedza, liczby, przestrzeń, pamięć — pięć pięter Bineta.",
+    ex:"Rozumowanie płynne, wiedza, rozumowanie ilościowe, przetwarzanie wzrokowo-przestrzenne, pamięć robocza."},
+   {t:"Jakie wskaźniki pozwala obliczyć SB5?", a:["IQ ogólne, werbalne i niewerbalne oraz wiek umysłowy","Wskaźnik Ogólnego Przystosowania","Trzy wskaźniki inteligencji emocjonalnej"], c:0, g:"s",
+    why:"WOP pochodzi z RISB, a trzy wskaźniki emocjonalne wylicza INTE.",
+    hook:"Binet podaje trzy ilorazy i jeszcze wiek umysłowy.",
+    ex:"IQ ogólne, werbalne, niewerbalne oraz wiek umysłowy."}]},
+
+ {code:"WAIS-R", full:"Skala Inteligencji Wechslera dla Dorosłych, wersja zrewidowana",
+  card:{mierzy:"Inteligencję ogólną: skrystalizowaną i płynną.",
+        budowa:"Zadania werbalne (słowne) i niewerbalne (bezsłowne).",
+        kto:"Dorośli i starsza młodzież: 16–79 lat.",
+        hak:"Nie myl przedziałów w rodzinie Wechslera: WAIS-R 16–79, WISC-R/WISC-V 6–16."},
+  q:[
+   {t:"Dla kogo przeznaczony jest WAIS-R (PL)?", a:["Dorośli i starsza młodzież, 16–79 lat","Dzieci i młodsza młodzież, 6–16 lat","Młodsza młodzież, 12–16 lat"], c:0, g:"w",
+    why:"WAIS-R: 16–79 lat. Przedział 6–16 to WISC, a 12–16 to APIS-P.",
+    hook:"WAIS — Wiekowi Adults. WISC — Wisienki, czyli Children.",
+    ex:"Dorośli i starsza młodzież, 16–79 lat."},
+   {t:"Co mierzą skale inteligencji Wechslera?", a:["Inteligencję ogólną: skrystalizowaną i płynną","Wyłącznie inteligencję płynną","Funkcje wykonawcze"], c:0, g:"",
+    why:"Wyłącznie płynną mierzy TMS (Raven), a funkcje wykonawcze — WCST.",
+    hook:"Wechsler bierze obie inteligencje, Raven tylko płynną.",
+    ex:"Inteligencja ogólna: skrystalizowana i płynna."}]},
+
+ {code:"WISC-V", full:"Skala Inteligencji Wechslera dla Dzieci, piąta edycja",
+  card:{mierzy:"Inteligencję ogólną (skrystalizowaną i płynną).",
+        budowa:"Zadania werbalne i niewerbalne.",
+        kto:"Dzieci i młodsza młodzież: 6–16 lat.",
+        hak:"WISC-V wolno stosować przy diagnozie lekkiej i umiarkowanej niepełnosprawności intelektualnej — nie głębszej."},
+  q:[
+   {t:"Przy diagnozie jakiej niepełnosprawności intelektualnej może być stosowany WISC-V?", a:["Lekkiej i umiarkowanej","Wszystkich stopni","Wyłącznie głębokiej"], c:0, g:"",
+    why:"WISC-V zatrzymuje się na umiarkowanej. Wszystkie stopnie różnicuje wyłącznie SB5.",
+    hook:"Wechsler dochodzi do „umiarkowanej” i oddaje pałeczkę Binetowi.",
+    ex:"Lekka i umiarkowana niepełnosprawność intelektualna."},
+   {t:"Kogo bada WISC-R / WISC-V?", a:["Dzieci i młodszą młodzież, 6–16 lat","Osoby 16–79 lat","Osoby 2–69 lat"], c:0, g:"w",
+    why:"WISC to wersja dziecięca: 6–16 lat. 16–79 to WAIS-R, a 2–69 to SB5.",
+    hook:"Sześć–szesnaście: cała podstawówka plus start liceum.",
+    ex:"Dzieci i młodsza młodzież, 6–16 lat."}]},
+
+ {code:"APIS-Z", full:"APIS-Z(R) — bateria testów inteligencji dla dorosłych",
+  card:{mierzy:"Inteligencję ogólną (skrystalizowaną i płynną) przez 4 typy zdolności: abstrakcyjno-logiczne, werbalne, wzrokowo-przestrzenne i społeczne.",
+        budowa:"Bateria 8 testów (np. synonimy, klasyfikacja, klocki, historyjki), zadania zamknięte i otwarte, forma zeszycików wypełnianych samodzielnie — możliwe szybkie badania grupowe.",
+        kto:"Dorośli i starsza młodzież, powyżej 17 lat.",
+        hak:"Wyniki APIS korelują z ocenami szkolnymi. Zeszycik „jak sprawdzian” to znak rozpoznawczy."},
+  q:[
+   {t:"Jakie 4 typy zdolności bada APIS?", a:["Abstrakcyjno-logiczne, werbalne, wzrokowo-przestrzenne, społeczne","Płynne, skrystalizowane, werbalne, społeczne","Abstrakcyjne, ilościowe, wzrokowe, pamięciowe"], c:0, g:"s",
+    why:"Odpowiedź c) miesza APIS ze skalami SB5 (rozumowanie ilościowe, pamięć robocza).",
+    hook:"A-W-W-S: Abstrakcja, Wyrazy, Wyobraźnia, Społeczność.",
+    ex:"Abstrakcyjno-logiczne, werbalne, wzrokowo-przestrzenne, społeczne."},
+   {t:"Z ilu testów składa się bateria APIS?", a:["8","5","4"], c:0, g:"n",
+    why:"8 testów. 5 to skale SB5, a 4 to typy zdolności w samym APIS — łatwo pomylić liczbę zdolności z liczbą testów.",
+    hook:"Cztery zdolności razy dwa podejścia równa się osiem testów.",
+    ex:"Bateria ośmiu testów."},
+   {t:"Kogo bada APIS-Z(R)?", a:["Dorosłych i starszą młodzież, powyżej 17 lat","Młodszą młodzież, 12–16 lat","Dzieci poniżej 3 roku życia"], c:0, g:"w",
+    why:"Z jak dorosły (powyżej 17), P jak młodszy (12–16). Poniżej 3 lat bada DSR.",
+    hook:"Z = Zaraz dorosły. P = Podstawówka na finiszu.",
+    ex:"Dorośli i starsza młodzież, powyżej siedemnastu lat."},
+   {t:"Jakie zadania znajdują się w baterii APIS?", a:["Synonimy, klasyfikacja, klocki, historyjki","Matryce z brakującym fragmentem","Sortowanie kart do wzorców"], c:0, g:"s",
+    why:"Matryce to TMS (Raven), a sortowanie kart do wzorców to WCST.",
+    hook:"Synonimy, klasyfikacja, klocki, historyjki — zeszycik jak sprawdzian.",
+    ex:"Synonimy, klasyfikacja, klocki, historyjki."}]},
+
+ {code:"APIS-P", full:"APIS-P(R) — bateria testów inteligencji dla młodzieży",
+  card:{mierzy:"To samo co APIS-Z: inteligencję ogólną przez 4 typy zdolności.",
+        budowa:"Bateria 8 testów w formie zeszycików; szybkie badanie grupowe.",
+        kto:"Młodsza młodzież, 12–16 lat.",
+        hak:"Para APIS-Z / APIS-P różni się WYŁĄCZNIE grupą wiekową, nie konstrukcją."},
+  q:[
+   {t:"Kogo bada APIS-P(R)?", a:["Młodszą młodzież, 12–16 lat","Dorosłych powyżej 17 lat","Dzieci 6–16 lat"], c:0, g:"w",
+    why:"APIS-P: 12–16 lat. Przedział 6–16 to WISC — bardzo bliski, dlatego to ulubiony dystraktor.",
+    hook:"APIS-P zaczyna od dwunastki, WISC już od szóstki.",
+    ex:"Młodsza młodzież, 12–16 lat."},
+   {t:"Z czym korelują wyniki APIS?", a:["Z ocenami szkolnymi","Z wynikiem MMSE","Ze Wskaźnikiem Ogólnego Przystosowania"], c:0, g:"",
+    why:"WOP pochodzi z RISB, a MMSE to przesiew otępienny — zupełnie inne narzędzia.",
+    hook:"Zeszycik jak sprawdzian, więc i wynik jak ocena.",
+    ex:"Wyniki korelują z ocenami szkolnymi."}]},
+
+ {code:"Leiter-3", tile:"LEIT-3", full:"Międzynarodowa Wykonaniowa Skala Leitera, edycja 3",
+  card:{mierzy:"Inteligencję płynną (IQ niewerbalne), pamięć niewerbalną, szybkość przetwarzania i wskaźniki rozwojowe.",
+        budowa:"Całkowicie niewerbalny (bez słów, bez obciążeń kulturowych): bateria poznawcza, bateria uwagi i pamięci (m.in. test Stroopa) oraz skala obserwacyjna (ocena poziomu aktywności i uwagi).",
+        kto:"Osoby w wieku 3–70+ lat.",
+        hak:"Niezwykle czuły na drobne zmiany rozwojowe, regresywne (otępienne) ORAZ na efekty rehabilitacji — dlatego nadaje się do monitorowania."},
+  q:[
+   {t:"Co mierzy Leiter-3?", a:["Inteligencję płynną, pamięć niewerbalną i szybkość przetwarzania","Inteligencję skrystalizowaną i wiedzę","Funkcje wykonawcze"], c:0, g:"",
+    why:"Leiter jest całkowicie niewerbalny, więc wiedzy skrystalizowanej nie zmierzy. Funkcje wykonawcze to WCST.",
+    hook:"Leiter bez litery — ani jednego słowa, sama płynność.",
+    ex:"Inteligencja płynna, pamięć niewerbalna, szybkość przetwarzania."},
+   {t:"Kogo bada Leiter-3?", a:["Osoby 3–70+ lat","Osoby 2–69 lat","Osoby powyżej 6 roku życia"], c:0, g:"w",
+    why:"Leiter: 3–70+. Przedział 2–69 to SB5, a powyżej 6 lat — TMS. Trzy bliźniaczo podobne przedziały, klasyczna pułapka.",
+    hook:"Leiter startuje rok po Binecie i kończy „plusem”: 3 do 70+.",
+    ex:"Osoby w wieku 3–70+ lat."},
+   {t:"W skład której części Leiter-3 wchodzi test Stroopa?", a:["Baterii uwagi i pamięci","Baterii poznawczej","Skali obserwacyjnej"], c:0, g:"s",
+    why:"Leiter-3 ma trzy części: poznawczą, uwagi i pamięci (tam Stroop) oraz obserwacyjną (aktywność i uwaga).",
+    hook:"Stroop testuje hamowanie, więc siedzi tam, gdzie uwaga.",
+    ex:"Bateria uwagi i pamięci."},
+   {t:"Który test jest szczególnie czuły na zmiany otępienne i efekty rehabilitacji?", a:["Leiter-3","TMS (Raven)","TCT-DP"], c:0, g:"",
+    why:"To wyróżnik Leiter-3: czułość na drobne zmiany rozwojowe, regresywne i rehabilitacyjne.",
+    hook:"Leiter widzi każdy milimetr postępu i każdy milimetr regresu.",
+    ex:"Leiter-3 — czuły na zmiany i rehabilitację."},
+   {t:"Z jakich trzech części składa się Leiter-3?", a:["Bateria poznawcza, bateria uwagi i pamięci, skala obserwacyjna","Skala wykonaniowa i skala obserwacyjna","Część słowna i część bezsłowna"], c:0, g:"s",
+    why:"Skalę wykonaniową i obserwacyjną ma DSR, a podział na część słowną i bezsłowną — SB5.",
+    hook:"Poznanie, uwaga z pamięcią, obserwacja — trzy piętra Leitera.",
+    ex:"Bateria poznawcza, bateria uwagi i pamięci, skala obserwacyjna."},
+   {t:"Co ocenia skala obserwacyjna Leiter-3?", a:["Poziom aktywności i uwagi","Temperament: wigor i wrażliwość","Nasilenie 24 rodzajów emocji"], c:0, g:"s",
+    why:"Wigor i wrażliwość ocenia skala obserwacyjna DSR, a 24 rodzaje emocji to MKS Hermansa.",
+    hook:"Dwie skale obserwacyjne, dwa cele: Leiter patrzy na uwagę, DSR na temperament.",
+    ex:"Poziom aktywności i uwagi."}]},
+
+ {code:"TMS", full:"Test Matryc Ravena",
+  card:{mierzy:"Wyłącznie inteligencję płynną.",
+        budowa:"Zadania w postaci niepełnych wzorów (matryc) — badany dobiera brakujący fragment. Test niewerbalny.",
+        kto:"Osoby powyżej 6 roku życia.",
+        hak:"Słowo „wyłącznie” jest kluczowe: Raven NIE mierzy inteligencji skrystalizowanej."},
+  q:[
+   {t:"Co mierzy Test Matryc Ravena?", a:["Wyłącznie inteligencję płynną","Inteligencję płynną i skrystalizowaną","Twórcze myślenie"], c:0, g:"",
+    why:"Raven mierzy wyłącznie płynną. Obie mierzą SB5, APIS i Wechsler; twórcze myślenie — TCT-DP.",
+    hook:"Raven to czysta płynność — ani kropli wiedzy szkolnej.",
+    ex:"Mierzy wyłącznie inteligencję płynną."},
+   {t:"Kogo bada TMS?", a:["Osoby powyżej 6 roku życia","Osoby 2–69 lat","Osoby 16–79 lat"], c:0, g:"w",
+    why:"TMS: powyżej 6 r.ż., z otwartą górną granicą. 2–69 to SB5, 16–79 to WAIS-R.",
+    hook:"Od szóstki w górę i bez sufitu — matryce nie mają emerytury.",
+    ex:"Osoby powyżej szóstego roku życia."},
+   {t:"Na czym polega zadanie w TMS?", a:["Na dobraniu brakującego fragmentu matrycy","Na dokończeniu rysunku w ramie","Na sortowaniu kart według odkrytej reguły"], c:0, g:"",
+    why:"Dokończenie rysunku to TCT-DP, sortowanie kart to WCST.",
+    hook:"Dziura we wzorze woła o łatkę.",
+    ex:"Dobranie brakującego fragmentu matrycy."}]},
+
+ {code:"DSR", full:"Dziecięca Skala Rozwojowa",
+  card:{mierzy:"Poziom rozwoju, opóźnienia rozwojowe, mocne i słabe strony funkcjonowania intelektualnego oraz temperament dziecka.",
+        budowa:"„Walizeczka z różnymi rzeczami” — badanie przez zabawę. Skala wykonaniowa (manipulacja, percepcja, bazgranie, mowa, pamięć) i skala obserwacyjna (temperament: wigor, wrażliwość).",
+        kto:"Małe dzieci, poniżej 3 roku życia.",
+        hak:"Jedyne narzędzie z tej krainy schodzące poniżej 3 lat — i jedyne badające temperament przez obserwację zabawy."},
+  q:[
+   {t:"Kogo bada Dziecięca Skala Rozwojowa?", a:["Małe dzieci poniżej 3 roku życia","Dzieci 6–16 lat","Osoby 3–70+ lat"], c:0, g:"w",
+    why:"DSR: poniżej 3 lat. Leiter zaczyna dopiero od 3, a WISC od 6.",
+    hook:"Walizeczka dla maluszka — DSR kończy tam, gdzie Leiter zaczyna.",
+    ex:"Małe dzieci poniżej trzeciego roku życia."},
+   {t:"Jak wygląda badanie DSR?", a:["Walizeczka z przedmiotami: skala wykonaniowa i obserwacyjna","Dziesięć plansz z plamami atramentowymi","Dwie talie po 64 karty"], c:0, g:"s",
+    why:"Plamy to Rorschach, talie kart to WCST.",
+    hook:"Diagnoza przez zabawę: otwierasz walizeczkę, nie zeszycik.",
+    ex:"Walizeczka: skala wykonaniowa i obserwacyjna."},
+   {t:"Co ocenia skala obserwacyjna DSR?", a:["Temperament dziecka (wigor, wrażliwość)","Siedem wymiarów temperamentu Strelaua","Wskaźnik Ogólnego Przystosowania"], c:0, g:"s",
+    why:"DSR podgląda temperament w zabawie; 7 wymiarów Strelaua to FCZ-KT(R), a WOP to RISB.",
+    hook:"DSR podgląda temperament, FCZ-KT wypytuje o niego wprost.",
+    ex:"Temperament dziecka: wigor, wrażliwość."},
+   {t:"Co obejmuje skala wykonaniowa DSR?", a:["Manipulację, percepcję, bazgranie, mowę i pamięć","Orientację w czasie, liczenie i powtarzanie","Rozumowanie płynne i wiedzę"], c:0, g:"s",
+    why:"Orientacja, liczenie i powtarzanie to zadania MMSE, a rozumowanie płynne i wiedza to skale SB5.",
+    hook:"Maluch manipuluje, patrzy, bazgrze, mówi i pamięta.",
+    ex:"Manipulacja, percepcja, bazgranie, mowa, pamięć."}]},
+
+ {code:"WCST", full:"Test Sortowania Kart z Wisconsin",
+  card:{mierzy:"Funkcje wykonawcze — aktywność nadzorczą, kontrolującą aktywność poznawczą. Wykrywa specyficzne deficyty poznawcze.",
+        budowa:"Dwie talie po 64 karty. Badany dopasowuje karty do wzorców i musi SAM odkryć regułę sortowania na podstawie informacji zwrotnej badacza (dobrze/źle).",
+        kto:"Narzędzie ogólne, wykorzystywane w diagnozie neuropsychologicznej.",
+        hak:"Reguły nikt nie podaje — właśnie dlatego test mierzy funkcje wykonawcze, a nie inteligencję."},
+  q:[
+   {t:"Co mierzy WCST?", a:["Funkcje wykonawcze","Inteligencję płynną","Rozumienie emocji"], c:0, g:"",
+    why:"Inteligencja płynna to TMS i Leiter-3, rozumienie emocji to TRE.",
+    hook:"Wisconsin sprawdza nadzorcę w twojej głowie.",
+    ex:"Funkcje wykonawcze i aktywność nadzorczą."},
+   {t:"Z czego składa się WCST?", a:["Z dwóch talii po 64 karty","Z 30 tablic","Z 300 przymiotników"], c:0, g:"n",
+    why:"2 × 64 karty. 30 tablic ma TAT, a 300 przymiotników — ACL.",
+    hook:"Dwie talie po 64 — jak dwie szachownice pełne kart.",
+    ex:"Dwie talie po sześćdziesiąt cztery karty."},
+   {t:"Skąd badany dowiaduje się, jak sortować karty w WCST?", a:["Sam odkrywa regułę z informacji zwrotnych badacza","Regułę podaje instrukcja","Reguła jest wydrukowana na kartach"], c:0, g:"",
+    why:"Cała diagnostyczność testu polega na samodzielnym odkryciu, a potem zmianie reguły.",
+    hook:"Badacz mówi tylko „dobrze / źle” — resztę musisz wykminić.",
+    ex:"Sam odkrywa regułę z informacji zwrotnych."},
+   {t:"Czemu służy WCST w diagnozie neuropsychologicznej?", a:["Wykrywaniu specyficznych deficytów poznawczych","Przesiewowi w kierunku otępienia","Pomiarowi ilorazu inteligencji"], c:0, g:"",
+    why:"Przesiew otępienny to MMSE, a iloraz inteligencji dają SB5, Wechsler i APIS.",
+    hook:"Wisconsin szuka konkretnej dziury w poznaniu, nie ogólnego poziomu.",
+    ex:"Wykrywaniu specyficznych deficytów poznawczych."}]},
+
+ {code:"MMSE", full:"Krótka Skala Oceny Stanu Umysłowego (MINIMENTAL)",
+  card:{mierzy:"Kliniczna skala przesiewowa w kierunku procesów otępiennych i dysfunkcji poznawczych; służy też monitorowaniu przebiegu chorób.",
+        budowa:"30 zadań: orientacja w czasie i miejscu, zapamiętywanie, liczenie, powtarzanie, nazywanie, rysowanie. Posiada zróżnicowane normy.",
+        kto:"Osoby dorosłe zdrowe oraz pacjenci m.in. z otępieniem, depresją, schizofrenią i chorobą Parkinsona.",
+        hak:"To badanie PRZESIEWOWE, a nie rozpoznanie otępienia."},
+  q:[
+   {t:"Czym jest MMSE?", a:["Przesiewową skalą w kierunku otępień i dysfunkcji poznawczych","Pełną diagnozą osobowości","Testem twórczego myślenia"], c:0, g:"",
+    why:"Mini-Mental przesiewa i monitoruje, ale nie stawia rozpoznania.",
+    hook:"Mini-Mental = mini-badanie. Przesiewa, nie orzeka.",
+    ex:"Przesiewowa skala otępień i dysfunkcji poznawczych."},
+   {t:"Ile zadań obejmuje MMSE?", a:["30","33","10"], c:0, g:"n",
+    why:"MMSE ma 30 zadań. 33 itemy ma INTE, a 10 itemów mają SES, LOT-R i GSES.",
+    hook:"Trzydzieści u MMSE, trzydzieści trzy u INTE — trójka więcej za emocje.",
+    ex:"Trzydzieści zadań."},
+   {t:"Dla jakich grup MMSE ma normy?", a:["Dla zdrowych dorosłych i pacjentów z otępieniem, depresją, schizofrenią, Parkinsonem","Wyłącznie dla osób zdrowych","Wyłącznie dla dzieci"], c:0, g:"w",
+    why:"MMSE posiada zróżnicowane normy obejmujące także populacje kliniczne.",
+    hook:"Zróżnicowane normy — od zdrowego seniora po pacjenta z Parkinsonem.",
+    ex:"Dorośli zdrowi oraz pacjenci kliniczni."},
+   {t:"Czego dotyczą zadania MMSE?", a:["Orientacji w czasie i miejscu, zapamiętywania, liczenia, powtarzania, nazywania i rysowania","Manipulacji, percepcji, bazgrania i mowy","Porządkowania słów i przewidywania emocji"], c:0, g:"s",
+    why:"Odpowiedź b) to skala wykonaniowa DSR, a c) to zadania TRE.",
+    hook:"Który mamy rok, proszę odjąć siedem, proszę narysować — to Mini-Mental.",
+    ex:"Orientacja, zapamiętywanie, liczenie, powtarzanie, nazywanie, rysowanie."}]},
+
+ {code:"TRE", full:"Wykonawczy Test Rozumienia Emocji",
+  card:{mierzy:"Zdolność rozumienia emocji i wiedzę emocjonalną.",
+        budowa:"30 zamkniętych zadań na materiale werbalnym, w 5 częściach o rosnącej trudności: porządkowanie słów, szukanie przeciwieństw emocji, znajdowanie składników emocji złożonych, przewidywanie emocji.",
+        kto:"Źródło nie podaje ścisłych ram wiekowych; złożoność werbalna sugeruje młodzież i dorosłych. [OGÓLNE] zweryfikuj z wykładem",
+        autor:"Koncepcja Saloveya i Mayera.",
+        hak:"TRE to test WYKONAWCZY (są dobre i złe odpowiedzi) — INTE, oparte na tej samej teorii, jest samoopisem."},
+  q:[
+   {t:"Na jakiej koncepcji opiera się TRE?", a:["Saloveya i Mayera","Murraya","Strelaua"], c:0, g:"",
+    why:"Murray stoi za TAT, a Strelau za FCZ-KT(R).",
+    hook:"Salovey i Mayer mają dwoje dzieci: TRE robi zadania, INTE opowiada o sobie.",
+    ex:"Koncepcja Saloveya i Mayera."},
+   {t:"Ile zadań ma TRE?", a:["30 zamkniętych","33","48"], c:0, g:"n",
+    why:"TRE: 30 zadań zamkniętych. 33 itemy to INTE, a 48 stwierdzeń to CISS.",
+    hook:"TRE trzydzieści, INTE trzydzieści trzy — emocjonalna para z różnicą trójki.",
+    ex:"Trzydzieści zadań zamkniętych."},
+   {t:"Czym TRE różni się od INTE?", a:["TRE jest testem wykonawczym, INTE samoopisem","TRE jest samoopisem, INTE testem wykonawczym","Obydwa są technikami projekcyjnymi"], c:0, g:"",
+    why:"Wspólna teoria, inna metoda pomiaru — to cała różnica i najczęstsze pytanie z tej pary.",
+    hook:"TRE każe rozwiązać, INTE każe ocenić siebie.",
+    ex:"TRE wykonawczy, INTE samoopisowy."},
+   {t:"Jak zbudowany jest materiał TRE?", a:["5 części o rosnącej trudności","3 wskaźniki","7 skal"], c:0, g:"s",
+    why:"3 wskaźniki daje INTE, a 7 skal ma FCZ-KT(R).",
+    hook:"Pięć pięter trudności, coraz wyżej po emocjach.",
+    ex:"Pięć części o rosnącej trudności."},
+   {t:"Jakie zadania zawiera TRE?", a:["Porządkowanie słów, szukanie przeciwieństw emocji, znajdowanie składników emocji złożonych, przewidywanie emocji","Ocenę własnej skuteczności w trudnych sytuacjach","Wybór przymiotników, które opisują badanego"], c:0, g:"s",
+    why:"Ocena własnej skuteczności to GSES, a wybór przymiotników to ACL.",
+    hook:"Poukładaj, znajdź przeciwieństwo, rozłóż emocję na części, przewidź finał.",
+    ex:"Porządkowanie słów, przeciwieństwa, składniki emocji złożonych, przewidywanie."}]},
+
+ {code:"TCT-DP", full:"Rysunkowy Test Twórczego Myślenia",
+  card:{mierzy:"Twórcze myślenie.",
+        budowa:"Dokończenie rysunku z wykorzystaniem kwadratowej ramy i elementów graficznych; ocena według 14 kryteriów (np. dodawanie nowych elementów, powiązania tematyczne).",
+        kto:"Normy głównie dla młodzieży.",
+        hak:"To próba ZADANIOWA, mimo że polega na rysowaniu — nie technika projekcyjna."},
+  q:[
+   {t:"Co mierzy TCT-DP?", a:["Twórcze myślenie","Inteligencję płynną","Funkcje wykonawcze"], c:0, g:"",
+    why:"To jedyne narzędzie w materiale mierzące twórcze myślenie.",
+    hook:"DP jak Drawing Production — produkujesz rysunek, oni mierzą kreatywność.",
+    ex:"Mierzy twórcze myślenie."},
+   {t:"Według ilu kryteriów oceniany jest TCT-DP?", a:["14","11","37"], c:0, g:"n",
+    why:"14 kryteriów. 11 skal ma MSEI, a 37 skal — ACL.",
+    hook:"Czternaście kryteriów na jeden dokończony kwadrat.",
+    ex:"Czternaście kryteriów oceny."},
+   {t:"Dla kogo TCT-DP ma normy?", a:["Głównie dla młodzieży","Dla osób 2–69 lat","Dla par małżeńskich"], c:0, g:"w",
+    why:"Źródło wskazuje normy głównie dla młodzieży.",
+    hook:"Kreatywność mierzona głównie na nastolatkach.",
+    ex:"Normy głównie dla młodzieży."},
+   {t:"Co należy do kryteriów oceny TCT-DP?", a:["Dodawanie nowych elementów i powiązania tematyczne","Opuszczenia i poprawki","Wybory pozytywne i negatywne"], c:0, g:"s",
+    why:"Opuszczenia i poprawki to analiza jakościowa RISB, a wybory pozytywne i negatywne to socjometria.",
+    hook:"Dorysuj coś swojego i zwiąż to w temat — tak liczą kreatywność.",
+    ex:"Dodawanie nowych elementów, powiązania tematyczne."}]}
+ ],
+ bossQ:[
+  {t:"„Walizeczka z zabawkami; badanie przez zabawę, ocenia rozwój i temperament dziecka poniżej 3 roku życia.”", a:["DSR","Leiter-3","TCT-DP"], c:0,
+   why:"Walizeczka, wiek poniżej 3 lat i temperament to Dziecięca Skala Rozwojowa.", hook:"Walizeczka zdradza DSR natychmiast.", ex:"DSR — Dziecięca Skala Rozwojowa."},
+  {t:"„Dwie talie po 64 karty; reguły sortowania nikt ci nie poda.”", a:["WCST","TMS","APIS-Z"], c:0,
+   why:"2 × 64 karty i samodzielne odkrywanie reguły to Wisconsin.", hook:"Karty bez instrukcji — Wisconsin.", ex:"WCST — Test Sortowania Kart z Wisconsin."},
+  {t:"„Całkowicie niewerbalny, bez obciążeń kulturowych, 3–70+ lat, czuły na zmiany otępienne.”", a:["Leiter-3","SB5","TMS"], c:0,
+   why:"Brak słów, przedział 3–70+ i czułość na regresję to Leiter-3.", hook:"Bez słów i bez sufitu — Leiter.", ex:"Leiter-3 — Wykonaniowa Skala Leitera."},
+  {t:"„30 zadań przesiewowych: orientacja, liczenie, powtarzanie, rysowanie.”", a:["MMSE","TRE","TCT-DP"], c:0,
+   why:"Przesiew otępienny w 30 zadaniach to Mini-Mental.", hook:"Trzydzieści zadań na przesiew — Mini-Mental.", ex:"MMSE — Krótka Skala Oceny Stanu Umysłowego."},
+  {t:"„Niepełne wzory — dobierz brakujący fragment. Mierzy wyłącznie inteligencję płynną.”", a:["TMS","Leiter-3","SB5"], c:0,
+   why:"Matryce z brakującym fragmentem i słowo „wyłącznie” to Raven.", hook:"Dziura we wzorze równa się Raven.", ex:"TMS — Test Matryc Ravena."},
+  {t:"„5 skal, każda słowna i bezsłowna; 2–69 lat; różnicuje wszystkie stopnie niepełnosprawności.”", a:["SB5","WISC-V","APIS-Z"], c:0,
+   why:"Tylko SB5 różnicuje wszystkie stopnie niepełnosprawności intelektualnej.", hook:"Wszystkie stopnie to zawsze Binet.", ex:"SB5 — Skala Stanford-Binet 5."},
+  {t:"„Bateria 8 testów w zeszycikach, szybkie badanie grupowe, 4 typy zdolności.”", a:["APIS","WAIS-R","Leiter-3"], c:0,
+   why:"Zeszyciki i badanie grupowe to znak rozpoznawczy APIS.", hook:"Zeszycik jak sprawdzian — APIS.", ex:"APIS — bateria ośmiu testów."},
+  {t:"„Dokończ rysunek w kwadratowej ramie; 14 kryteriów oceny; normy dla młodzieży.”", a:["TCT-DP","Test Drzewa","Test Rysunku Rodziny"], c:0,
+   why:"Rysunek, ale punktowany według kryteriów — to próba zadaniowa TCT-DP.", hook:"Rama plus 14 kryteriów to TCT-DP, nie projekcja.", ex:"TCT-DP — Rysunkowy Test Twórczego Myślenia."},
+  {t:"„30 zamkniętych zadań werbalnych o emocjach, 5 części o rosnącej trudności.”", a:["TRE","INTE","MMSE"], c:0,
+   why:"Zadania z poprawnymi odpowiedziami o emocjach to TRE, nie samoopisowe INTE.", hook:"Zadania o emocjach zawsze TRE.", ex:"TRE — Wykonawczy Test Rozumienia Emocji."}
+ ]
+},
+{
+ id:"sam", emoji:"📋", name:"Dolina Samoopisu", hue:"var(--c2)", tint:"#2a2211",
+ intro:"Narzędzia opierające się na przekonaniach osoby badanej i jej wglądzie w siebie. Nie ma tu „dobrych” ani „złych” odpowiedzi.",
+ boss:{name:"Wielki Kwestionariusz", badge:"🏅 Władca Itemów"},
+ stations:[
+ {code:"MMPI-2", full:"Minnesocki Wielowymiarowy Inwentarz Osobowości 2",
+  card:{mierzy:"Szeroko rozumianą patologię osobowości, zaburzenia i cechy kliniczne. Narzędzie kliniczne oparte na konstrukcji empirycznej.",
+        budowa:"567 pytań dychotomicznych (tak/nie) pogrupowanych w 121 skal: kontrolne, kliniczne (np. depresja, schizofrenia, psychastenia) i dodatkowe.",
+        kto:"Dorośli pacjenci i osoby poddawane ocenie klinicznej.",
+        hak:"Wymaga niezwykle skomplikowanej ANALIZY PROFILOWEJ ułożenia skal — nie odczytuje się pojedynczych wyników."},
+  q:[
+   {t:"Ile pytań ma MMPI-2?", a:["567","240","300"], c:0, g:"n",
+    why:"MMPI-2: 567 pytań. 240 itemów ma NEO-PI-R, a 300 przymiotników — ACL.",
+    hook:"Pięć-sześć-siedem: schodki w górę do klinicznego piekła.",
+    ex:"Pięćset sześćdziesiąt siedem pytań dychotomicznych."},
+   {t:"W ile skal pogrupowane są pytania MMPI-2?", a:["121","37","11"], c:0, g:"s",
+    why:"121 skal (kontrolne, kliniczne, dodatkowe). 37 skal ma ACL, a 11 skal — MSEI.",
+    hook:"121 to jedenaście do kwadratu — dlatego trzeba analizy profilowej, nie zwykłego czytania.",
+    ex:"Sto dwadzieścia jeden skal."},
+   {t:"Na jakiej konstrukcji oparty jest MMPI-2?", a:["Empirycznej","Czynnikowej","Teoretycznej"], c:0, g:"",
+    why:"MMPI-2 jest sztandarowym przykładem konstrukcji empirycznej (kryterialnej).",
+    hook:"Empiria najpierw, teoria potem — Minnesota pytała pacjentów, nie podręcznika.",
+    ex:"Konstrukcja empiryczna."},
+   {t:"Jaki format odpowiedzi ma MMPI-2?", a:["Dychotomiczny: tak/nie","Skala 4-stopniowa","Rangowanie wartości"], c:0, g:"",
+    why:"Skalę 4-stopniową mają FCZ-KT(R) i PROKOS, a rangowanie — RVS.",
+    hook:"567 razy „tak albo nie” i ani jednego „może”.",
+    ex:"Pytania dychotomiczne: tak lub nie."},
+   {t:"Na jakie grupy dzielą się skale MMPI-2?", a:["Kontrolne, kliniczne i dodatkowe","Potrzeb, tematyczne, analizy transakcyjnej i kontrolne","Diagnostyczne i buforowe"], c:0, g:"s",
+    why:"Odpowiedź b) to podział 37 skal ACL, a c) to podział 90 itemów PROKOS.",
+    hook:"Kontrola, klinika, dodatki — trzy szuflady Minnesoty.",
+    ex:"Skale kontrolne, kliniczne i dodatkowe."},
+   {t:"Która z tych skal jest kliniczną skalą MMPI-2?", a:["Psychastenia","Witalność","Rytmiczność"], c:0, g:"s",
+    why:"Witalność to skala MSEI, a rytmiczność — FCZ-KT(R).",
+    hook:"Psychastenia brzmi staroświecko, bo MMPI wyrosło z klinicznej empirii.",
+    ex:"Psychastenia — obok depresji i schizofrenii."}]},
+
+ {code:"NEO-FFI", full:"NEO-FFI / NEO-PI-R — inwentarze osobowości",
+  card:{mierzy:"Podstawowe cechy osobowości w ujęciu Wielkiej Piątki: neurotyczność, ekstrawersja, otwartość, ugodowość, sumienność.",
+        budowa:"Kwestionariusz samoopisowy. Wersja NEO-PI-R ma aż 240 itemów mierzących cechy oraz ich składniki.",
+        kto:"Młodzież i dorośli.",
+        hak:"Para NEO-FFI / NEO-PI-R: to NEO-PI-R (240 itemów) schodzi do składników cech."},
+  q:[
+   {t:"Ile itemów ma NEO-PI-R?", a:["240","567","133"], c:0, g:"n",
+    why:"NEO-PI-R: 240 itemów. 567 pytań ma MMPI-2, a 133 stwierdzenia — WKP.",
+    hook:"PI-R jak Pełna Inwentaryzacja: 240 itemów, bo mierzy też składniki cech.",
+    ex:"Dwieście czterdzieści itemów."},
+   {t:"Jaki model osobowości diagnozuje NEO-FFI?", a:["Wielką Piątkę","Gigantyczną Trójkę","Siedem wymiarów temperamentu"], c:0, g:"s",
+    why:"Gigantyczna Trójka to EPQ-R (Eysenck), a 7 wymiarów temperamentu to FCZ-KT(R) (Strelau).",
+    hook:"NEO liczy do pięciu, Eysenck tylko do trzech, Strelau aż do siedmiu.",
+    ex:"Wielka Piątka cech osobowości."},
+   {t:"Która cecha NIE należy do Wielkiej Piątki?", a:["Psychotyzm","Ugodowość","Sumienność"], c:0, g:"s",
+    why:"Psychotyzm to składnik Gigantycznej Trójki Eysencka, mierzony przez EPQ-R.",
+    hook:"Psychotyzm nie mieszka u NEO — wynajmuje pokój u Eysencka.",
+    ex:"Psychotyzm — należy do modelu Eysencka."},
+   {t:"Czym różni się NEO-PI-R od NEO-FFI?", a:["NEO-PI-R mierzy cechy oraz ich składniki i ma 240 itemów","NEO-FFI mierzy sześć cech zamiast pięciu","NEO-PI-R przeznaczone jest wyłącznie dla dzieci"], c:0, g:"",
+    why:"Obie wersje mierzą Wielką Piątkę; NEO-PI-R jest rozbudowaną wersją schodzącą do składników cech.",
+    hook:"FFI to skrót do pięciu cech, PI-R to pełna wersja z podszewką.",
+    ex:"NEO-PI-R dodaje składniki cech."},
+   {t:"Które cechy tworzą Wielką Piątkę mierzoną przez NEO-FFI?", a:["Neurotyczność, ekstrawersja, otwartość, ugodowość, sumienność","Neurotyzm, psychotyzm, ekstrawersja","Asertywność, kooperacja, towarzyskość, społecznikowskość, zaradność"], c:0, g:"s",
+    why:"Odpowiedź b) to Gigantyczna Trójka Eysencka, a c) to kompetencje z PROKOS.",
+    hook:"Nerwy, ludzie, nowość, zgoda, obowiązek — pięć palców Wielkiej Piątki.",
+    ex:"Neurotyczność, ekstrawersja, otwartość, ugodowość, sumienność."}]},
+
+ {code:"EPQ-R", full:"EPQ-R / EPQ-R(S) — Kwestionariusz Osobowości Eysencka",
+  card:{mierzy:"Cechy osobowości w modelu „Gigantycznej Trójki” Eysencka: neurotyzm, psychotyzm, ekstrawersja.",
+        budowa:"Posiada m.in. skale kłamstwa (kontrolne); opiera się na konotacjach biologicznych.",
+        kto:"Dorośli i młodzież.",
+        hak:"Psychotyzm to znacznik Eysencka. Jeśli pojawia się w opcji obok ugodowości i sumienności — to dystraktor z NEO."},
+  q:[
+   {t:"Co składa się na „Gigantyczną Trójkę” Eysencka?", a:["Neurotyzm, psychotyzm, ekstrawersja","Neurotyczność, ekstrawersja, otwartość","Ekstrawersja, ugodowość, sumienność"], c:0, g:"s",
+    why:"Odpowiedzi b) i c) to fragmenty Wielkiej Piątki z NEO.",
+    hook:"N-P-E: Naprawdę Potężna Eysenckowska trójka.",
+    ex:"Neurotyzm, psychotyzm, ekstrawersja."},
+   {t:"Jakie skale kontrolne zawiera EPQ-R?", a:["Skale kłamstwa","Skalę potrzeby aprobaty","Pozycje buforowe"], c:0, g:"s",
+    why:"Potrzeba aprobaty to kontrola w MSEI, a pozycje buforowe (30 z 90) to PROKOS.",
+    hook:"Eysenck łapie na kłamstwie, MSEI na potrzebie aprobaty, PROKOS chowa bufory.",
+    ex:"Skale kłamstwa, czyli kontrolne."},
+   {t:"Na czym opiera się model EPQ-R?", a:["Na konotacjach biologicznych","Na teorii Bandury","Na teorii potrzeb Murraya"], c:0, g:"",
+    why:"Bandura stoi za GSES, a Murray za TAT.",
+    hook:"Eysenck szukał osobowości w biologii, nie w narracji.",
+    ex:"Opiera się na konotacjach biologicznych."}]},
+
+ {code:"FCZ-KT", full:"FCZ-KT(R) — Formalna Charakterystyka Zachowania, Kwestionariusz Temperamentu",
+  card:{mierzy:"Podstawowe, pierwotnie biologicznie uwarunkowane wymiary temperamentu. Ujmuje FORMALNY, a nie treściowy aspekt zachowania.",
+        budowa:"100 pozycji z 4-stopniową skalą ocen; 7 skal: Żwawość, Perseweratywność, Wrażliwość sensoryczna, Wytrzymałość, Reaktywność emocjonalna, Aktywność, Rytmiczność.",
+        kto:"Młodzież od 15 roku życia i dorośli; badanie indywidualne lub grupowe.",
+        autor:"Teoria Strelaua (regulacyjna teoria temperamentu).",
+        hak:"„Witalność” NIE jest skalą FCZ-KT — to skala MSEI. Najczęstsza podmianka na egzaminie."},
+  q:[
+   {t:"Ile pozycji ma FCZ-KT(R)?", a:["100","116","90"], c:0, g:"n",
+    why:"FCZ-KT(R): 100 pozycji. 116 pozycji ma MSEI, a 90 itemów — PROKOS.",
+    hook:"Setka pozycji, siódemka skal — temperament w okrągłej setce.",
+    ex:"Sto pozycji, skala czterostopniowa."},
+   {t:"Ile skal zawiera FCZ-KT(R)?", a:["7","11","4"], c:0, g:"s",
+    why:"7 skal. 11 skal ma MSEI, a 4 to liczba typów zdolności APIS.",
+    hook:"Siedem skal temperamentu jak siedem dni tygodnia — działasz tak samo w każdy.",
+    ex:"Siedem skal temperamentu."},
+   {t:"Która z poniższych NIE jest skalą FCZ-KT(R)?", a:["Witalność","Perseweratywność","Rytmiczność"], c:0, g:"s",
+    why:"Witalność to jedna z 11 skal MSEI. Perseweratywność i Rytmiczność należą do siedmiu skal Strelaua.",
+    hook:"Witalność mieszka w MSEI, nie u Strelaua.",
+    ex:"Witalność — należy do MSEI."},
+   {t:"Na jakiej teorii opiera się FCZ-KT(R)?", a:["Na teorii Strelaua","Na teorii Eysencka","Na teorii Rosenberga"], c:0, g:"",
+    why:"Eysenck stoi za EPQ-R, a Rosenberg za SES.",
+    hook:"Strelau pyta JAK się zachowujesz, nie CO robisz — to formalna charakterystyka.",
+    ex:"Teoria temperamentu Strelaua."},
+   {t:"Kogo bada FCZ-KT(R)?", a:["Młodzież od 15 roku życia i dorosłych","Dzieci poniżej 3 roku życia","Pary małżeńskie"], c:0, g:"w",
+    why:"Poniżej 3 lat bada DSR, a pary małżeńskie — KKM.",
+    hook:"Piętnastka to bilet wstępu do temperamentu Strelaua.",
+    ex:"Młodzież od piętnastu lat i dorośli."},
+   {t:"Które skale tworzą FCZ-KT(R)?", a:["Żwawość, perseweratywność, wrażliwość sensoryczna, wytrzymałość, reaktywność emocjonalna, aktywność, rytmiczność","Kompetencje, bycie kochanym, witalność, atrakcyjność fizyczna, samokontrola","Rozumowanie płynne, wiedza, rozumowanie ilościowe, przetwarzanie wzrokowo-przestrzenne, pamięć robocza"], c:0, g:"s",
+    why:"Odpowiedź b) wylicza skale MSEI, a c) skale SB5.",
+    hook:"Siedem skal Strelaua mówi JAK działasz: jak szybko, jak długo, jak mocno, jak regularnie.",
+    ex:"Żwawość, perseweratywność, wrażliwość sensoryczna, wytrzymałość, reaktywność emocjonalna, aktywność, rytmiczność."},
+   {t:"Która z tych skal NALEŻY do FCZ-KT(R)?", a:["Wytrzymałość","Samokontrola","Zaradność"], c:0, g:"s",
+    why:"Samokontrola to skala MSEI, a zaradność — kompetencja z PROKOS.",
+    hook:"Wytrzymałość u Strelaua, samokontrola u MSEI, zaradność u PROKOS.",
+    ex:"Wytrzymałość — jedna z siedmiu skal."}]},
+
+ {code:"ACL", full:"ACL — Lista Przymiotników Gougha",
+  card:{mierzy:"Różne cechy osobowościowe, strukturę Ja (realne, idealne), stereotypy i potrzeby.",
+        budowa:"300 przymiotników, z których badany wybiera opisujące go; instrukcję można modyfikować. Posiada 37 skal: potrzeb, tematyczne, analizy transakcyjnej i kontrolne.",
+        kto:"Dorośli i młodzież.",
+        hak:"Modyfikowalna instrukcja pozwala badać Ja realne, Ja idealne i stereotypy tym samym narzędziem."},
+  q:[
+   {t:"Ile przymiotników zawiera ACL?", a:["300","240","100"], c:0, g:"n",
+    why:"ACL: 300 przymiotników. 240 itemów ma NEO-PI-R, a 100 pozycji — FCZ-KT(R).",
+    hook:"Trzysta przymiotników, trzydzieści siedem skal — lista długa jak katalog.",
+    ex:"Trzysta przymiotników do wyboru."},
+   {t:"Ile skal ma ACL?", a:["37","121","11"], c:0, g:"s",
+    why:"37 skal. 121 skal ma MMPI-2, a 11 skal — MSEI.",
+    hook:"Trzysta słów przemielonych na trzydzieści siedem skal.",
+    ex:"Trzydzieści siedem skal."},
+   {t:"Co bada ACL?", a:["Strukturę Ja, potrzeby i stereotypy","Style radzenia sobie ze stresem","Kompetencje społeczne"], c:0, g:"",
+    why:"Style radzenia sobie to CISS, a kompetencje społeczne to PROKOS/KKS.",
+    hook:"Zmieniasz instrukcję, zmieniasz obiekt: ja realne, ja idealne, stereotyp.",
+    ex:"Struktura Ja, potrzeby i stereotypy."},
+   {t:"Jakie grupy skal zawiera ACL?", a:["Skale potrzeb, tematyczne, analizy transakcyjnej i kontrolne","Skale kontrolne, kliniczne i dodatkowe","Skale asertywne, kooperacyjne i towarzyskie"], c:0, g:"s",
+    why:"Odpowiedź b) to podział skal MMPI-2, a c) to kompetencje PROKOS.",
+    hook:"Gough dorzucił do listy przymiotników nawet analizę transakcyjną.",
+    ex:"Skale potrzeb, tematyczne, analizy transakcyjnej, kontrolne."}]},
+
+ {code:"STAI", full:"STAI — Inwentarz Stanu i Cechy Lęku",
+  card:{mierzy:"Pozwala ocenić i rozróżnić lęk dyspozycyjny (stałą cechę osobowości) od lęku reaktywnego (związanego z sytuacją „tu i teraz”).",
+        budowa:"Dwie części: stan („jak się czujesz teraz”) i cecha („jak się zazwyczaj czujesz”).",
+        kto:"Dzieci (wersja STAI-C), młodzież i dorośli, osoby zdrowe i chore — także np. w prognozie wojskowej.",
+        hak:"Instrukcja rozstrzyga wszystko: „teraz” = stan, „zazwyczaj” = cecha."},
+  q:[
+   {t:"Co pozwala rozróżnić STAI?", a:["Lęk-cechę (dyspozycyjny) i lęk-stan (reaktywny)","Optymizm i pesymizm dyspozycyjny","Samoocenę globalną i szczegółową"], c:0, g:"",
+    why:"Optymizm i pesymizm mierzy LOT-R, a samoocenę globalną vs szczegółową — para SES / MSEI.",
+    hook:"Jedno narzędzie, dwa zegary: chwilowy i stały.",
+    ex:"Lęk-stan i lęk-cechę."},
+   {t:"Instrukcja „jak się zazwyczaj czujesz” dotyczy w STAI:", a:["Lęku-cechy","Lęku-stanu","Obu części jednocześnie"], c:0, g:"",
+    why:"„Zazwyczaj” to dyspozycja, czyli cecha. „Teraz” to stan reaktywny.",
+    hook:"„Teraz” równa się stan, „zazwyczaj” równa się cecha. Dwa słowa, całe pytanie.",
+    ex:"Lęku-cechy, czyli dyspozycyjnego."},
+   {t:"Jak nazywa się wersja STAI dla dzieci?", a:["STAI-C","CAT-S","EPQ-R(S)"], c:0, g:"w",
+    why:"CAT-S to odmiana dziecięcego testu apercepcji, a EPQ-R(S) to skrócona wersja kwestionariusza Eysencka.",
+    hook:"C jak Children — STAI-C.",
+    ex:"STAI-C, wersja dla dzieci."},
+   {t:"Gdzie poza kliniką stosuje się STAI?", a:["Na przykład w prognozie wojskowej","W doradztwie zawodowym","W diagnozie autyzmu"], c:0, g:"",
+    why:"Doradztwo zawodowe to WKP, a diagnoza autyzmu to wywiad DISCO.",
+    hook:"Lęk mierzą i w gabinecie, i przed wcieleniem do wojska.",
+    ex:"Między innymi w prognozie wojskowej."}]},
+
+ {code:"SES", full:"SES — Skala Samooceny Rosenberga",
+  card:{mierzy:"Świadomą, globalną samoocenę traktowaną jako względnie stabilna cecha.",
+        budowa:"Narzędzie jednowymiarowe, 10 itemów.",
+        kto:"Populacja ogólna.",
+        autor:"Rosenberg.",
+        hak:"Para SES / MSEI: SES jest jednowymiarowa i globalna, MSEI wielowymiarowa i szczegółowa."},
+  q:[
+   {t:"Co mierzy SES?", a:["Globalną samoocenę, jednowymiarowo","Jedenaście składowych samooceny","Pozytywne ustosunkowanie do świata"], c:0, g:"",
+    why:"11 składowych to MSEI, a pozytywne ustosunkowanie do siebie, świata i przyszłości — Kwestionariusz Pozytywności (PK).",
+    hook:"SES to jedno pytanie w dziesięciu wersjach: „ile jestem wart?”.",
+    ex:"Globalna samoocena, ujęcie jednowymiarowe."},
+   {t:"Ile itemów ma SES?", a:["10","116","5"], c:0, g:"n",
+    why:"SES: 10 itemów. 116 pozycji ma MSEI, a 5 itemów — SWLS.",
+    hook:"Dziesiątkowy klub samooceny: SES, LOT-R i GSES.",
+    ex:"Dziesięć itemów, wymiar jeden."},
+   {t:"Kto jest autorem SES?", a:["Rosenberg","Gough","Rokeach"], c:0, g:"",
+    why:"Gough stworzył ACL, a Rokeach — Skalę Wartości RVS.",
+    hook:"Rosenberg mierzy wartość siebie, Rokeach wartości w ogóle.",
+    ex:"Rosenberg — stąd nazwa skali."}]},
+
+ {code:"MSEI", full:"MSEI — Wielowymiarowy Kwestionariusz Samooceny",
+  card:{mierzy:"Różne, szczegółowe składowe samooceny i poczucia własnej wartości.",
+        budowa:"116 pozycji testowych, 11 skal (m.in. kompetencje, bycie kochanym, witalność, atrakcyjność fizyczna, samokontrola) oraz wbudowane skale kontrolne, np. potrzeba aprobaty.",
+        kto:"Populacja ogólna.",
+        hak:"Witalność i atrakcyjność fizyczna to skale MSEI — wrzucane bywają podstępnie do FCZ-KT."},
+  q:[
+   {t:"Ile pozycji testowych ma MSEI?", a:["116","100","133"], c:0, g:"n",
+    why:"MSEI: 116 pozycji. 100 pozycji ma FCZ-KT(R), a 133 stwierdzenia — WKP.",
+    hook:"116 — samoocena o szesnaście bogatsza od temperamentu.",
+    ex:"Sto szesnaście pozycji testowych."},
+   {t:"Ile skal zawiera MSEI?", a:["11","7","37"], c:0, g:"s",
+    why:"11 skal. 7 skal ma FCZ-KT(R), a 37 skal — ACL.",
+    hook:"Jedenaście skal samooceny, bo jedna globalna to za mało.",
+    ex:"Jedenaście skal plus skale kontrolne."},
+   {t:"Czym różni się MSEI od SES?", a:["MSEI jest wielowymiarowy, SES jednowymiarowy","MSEI jest jednowymiarowy, SES wielowymiarowy","Oba są jednowymiarowe"], c:0, g:"",
+    why:"SES mierzy samoocenę globalną jednym wymiarem; MSEI rozbija ją na 11 szczegółowych składowych.",
+    hook:"SES to selfie ogólne, MSEI to mnóstwo składowych.",
+    ex:"MSEI wielowymiarowy, SES jednowymiarowy."},
+   {t:"Która z tych skal należy do MSEI?", a:["Witalność","Żwawość","Zaradność"], c:0, g:"s",
+    why:"Żwawość to skala FCZ-KT(R), a zaradność to kompetencja z PROKOS.",
+    hook:"Witalność — MSEI. Żwawość — Strelau. Zaradność — PROKOS. Trzy różne krainy.",
+    ex:"Witalność — jedna ze skal MSEI."},
+   {t:"Jaką skalę kontrolną ma wbudowaną MSEI?", a:["Potrzebę aprobaty","Skalę kłamstwa Eysencka","Pozycje buforowe"], c:0, g:"s",
+    why:"Skala kłamstwa to EPQ-R, a pozycje buforowe (30 z 90) to PROKOS.",
+    hook:"MSEI pyta wprost: czy aby nie chcesz się przypodobać?",
+    ex:"Skala potrzeby aprobaty."},
+   {t:"Które z wymienionych to skale MSEI?", a:["Kompetencje, bycie kochanym, atrakcyjność fizyczna, samokontrola","Wsparcie, zaangażowanie, deprecjacja","Żwawość, wytrzymałość, rytmiczność"], c:0, g:"s",
+    why:"Odpowiedź b) to wymiary KKM, a c) to skale FCZ-KT(R).",
+    hook:"MSEI pyta, czy czujesz się kompetentna, kochana, atrakcyjna i opanowana.",
+    ex:"Kompetencje, bycie kochanym, atrakcyjność fizyczna, samokontrola."}]},
+
+ {code:"CISS", full:"CISS — Kwestionariusz Radzenia Sobie w Sytuacjach Stresowych",
+  card:{mierzy:"Preferencje do stosowania trzech głównych stylów radzenia sobie ze stresem: skoncentrowanego na zadaniu, na emocjach i na unikaniu.",
+        budowa:"48 stwierdzeń z 5-stopniową skalą odpowiedzi.",
+        kto:"Dorośli i młodzież.",
+        hak:"CISS mierzy STYL (preferencję dyspozycyjną), a nie strategię użytą w konkretnej sytuacji."},
+  q:[
+   {t:"Jakie style radzenia sobie wyróżnia CISS?", a:["Skoncentrowany na zadaniu, na emocjach, na unikaniu","Asertywny, kooperacyjny, towarzyski","Wsparcie, zaangażowanie, deprecjacja"], c:0, g:"s",
+    why:"Odpowiedź b) to kompetencje z PROKOS, a c) to wymiary KKM.",
+    hook:"Zadanie, emocje, ucieczka — trzy drogi wyjścia ze stresu.",
+    ex:"Zadaniowy, emocjonalny, unikowy."},
+   {t:"Z ilu stwierdzeń składa się CISS?", a:["48 z 5-stopniową skalą","30","33"], c:0, g:"n",
+    why:"CISS: 48 stwierdzeń. 30 zadań ma MMSE i TRE, a 33 itemy — INTE.",
+    hook:"48 stwierdzeń na trzy style — po szesnaście na każdą drogę ucieczki.",
+    ex:"Czterdzieści osiem stwierdzeń."}]},
+
+ {code:"LOT-R", full:"LOT-R — Test Orientacji Życiowej",
+  card:{mierzy:"Dyspozycyjny optymizm lub pesymizm.",
+        budowa:"10 twierdzeń z 5-stopniową skalą, np. „Ogólnie oczekuję, że przydarzy mi się więcej dobrego niż złego”.",
+        kto:"Osoby zdrowe i chore.",
+        hak:"Optymizm DYSPOZYCYJNY — czyli cecha, nie nastrój."},
+  q:[
+   {t:"Co mierzy LOT-R?", a:["Dyspozycyjny optymizm lub pesymizm","Satysfakcję z życia","Uogólnioną własną skuteczność"], c:0, g:"",
+    why:"Satysfakcję z życia mierzy SWLS, a własną skuteczność — GSES.",
+    hook:"LOT jak Life Orientation: dokąd, twoim zdaniem, to wszystko zmierza.",
+    ex:"Dyspozycyjny optymizm lub pesymizm."},
+   {t:"Z ilu twierdzeń składa się LOT-R?", a:["10","5","33"], c:0, g:"n",
+    why:"LOT-R: 10 twierdzeń. 5 itemów ma SWLS, a 33 itemy — INTE.",
+    hook:"Dziesiątki: SES, LOT-R, GSES. Piątka: SWLS.",
+    ex:"Dziesięć twierdzeń, skala pięciostopniowa."}]},
+
+ {code:"SWLS", full:"SWLS — Skala Satysfakcji z Życia",
+  card:{mierzy:"Ogólną jakość życia odniesioną do wybranych przez osobę badaną, subiektywnych kryteriów.",
+        budowa:"5 itemów, np. „Gdybym mógł jeszcze raz przeżyć swoje życie…”.",
+        kto:"Osoby zdrowe i chore.",
+        hak:"Kryteria są SUBIEKTYWNE, wybierane przez badanego — nie ma tu obiektywnej listy warunków dobrego życia."},
+  q:[
+   {t:"Ile itemów ma SWLS?", a:["5","10","48"], c:0, g:"n",
+    why:"SWLS: 5 itemów — najkrótsza skala w tej dolinie. 10 itemów mają SES, LOT-R i GSES; 48 stwierdzeń ma CISS.",
+    hook:"Pięć zdań na całe życie — najkrótsza skala w dolinie.",
+    ex:"Pięć itemów."},
+   {t:"Co mierzy SWLS?", a:["Ogólną jakość życia wg subiektywnych kryteriów badanego","Dyspozycyjny optymizm","Pozytywne ustosunkowanie do przyszłości"], c:0, g:"",
+    why:"Optymizm to LOT-R, a pozytywne ustosunkowanie do siebie, świata i przyszłości — PK.",
+    hook:"To ty ustalasz, co znaczy „dobre życie” — SWLS tylko liczy.",
+    ex:"Ogólna jakość życia według własnych kryteriów."}]},
+
+ {code:"GSES", full:"GSES — Skala Uogólnionej Własnej Skuteczności",
+  card:{mierzy:"Siłę ogólnego przekonania o skuteczności radzenia sobie z trudnymi sytuacjami.",
+        budowa:"10 itemów, np. „Jestem pewny, że skutecznie stawiłbym czoła…”.",
+        kto:"Dorosłe osoby zdrowe i chore; normy dla 7 grup klinicznych (np. po zawale, ze stwardnieniem rozsianym, diabetycy).",
+        autor:"Teoria Bandury (poczucie własnej skuteczności).",
+        hak:"Liczba 7 przy GSES to GRUPY KLINICZNE norm, a nie liczba skal."},
+  q:[
+   {t:"Na jakiej teorii opiera się GSES?", a:["Na teorii Bandury","Na teorii Strelaua","Na koncepcji Saloveya i Mayera"], c:0, g:"",
+    why:"Strelau stoi za FCZ-KT(R), a Salovey i Mayer za TRE oraz INTE.",
+    hook:"Bandura i self-efficacy — GSES to jego skala.",
+    ex:"Teoria własnej skuteczności Bandury."},
+   {t:"Ile itemów ma GSES?", a:["10","5","30"], c:0, g:"n",
+    why:"GSES: 10 itemów. 5 itemów ma SWLS, a 30 zadań — MMSE.",
+    hook:"Dziesięć itemów, siedem grup klinicznych — Bandura na oddziale.",
+    ex:"Dziesięć itemów."},
+   {t:"Dla ilu grup klinicznych GSES ma normy?", a:["Dla 7 grup (np. po zawale, SM, diabetycy)","Dla 3 grup","Wyłącznie dla osób zdrowych"], c:0, g:"n",
+    why:"7 grup klinicznych. Uwaga: to nie jest liczba skal — GSES jest jednowymiarowe.",
+    hook:"Siódemka przy GSES dotyczy pacjentów, nie skal.",
+    ex:"Normy dla siedmiu grup klinicznych."}]},
+
+ {code:"PK", full:"PK — Kwestionariusz Pozytywności",
+  card:{mierzy:"Pozytywne ustosunkowanie do siebie, świata i przyszłości.",
+        budowa:"Samoopisowa skala postaw.",
+        kto:"Populacja ogólna.",
+        hak:"Triada „ja – świat – przyszłość” to znak rozpoznawczy PK; nie myl z globalną samooceną (SES) ani z optymizmem (LOT-R)."},
+  q:[
+   {t:"Co mierzy Kwestionariusz Pozytywności?", a:["Pozytywne ustosunkowanie do siebie, świata i przyszłości","Globalną samoocenę","Dyspozycyjny optymizm"], c:0, g:"",
+    why:"Globalna samoocena to SES, a dyspozycyjny optymizm to LOT-R. PK obejmuje całą triadę.",
+    hook:"Pozytywność to triada: ja, świat, przyszłość.",
+    ex:"Ustosunkowanie do siebie, świata i przyszłości."}]},
+
+ {code:"RVS", full:"RVS — Skala Wartości Rokeacha",
+  card:{mierzy:"Hierarchię wartości instrumentalnych i ostatecznych; pozwala porównywać jednostkę z grupą lub partnerów między sobą.",
+        budowa:"Rangowa skala pomiarowa: badany fizycznie porządkuje wartości według ważności. Nie liczy się wyników w klasyczny, znormalizowany sposób ilościowy.",
+        kto:"Populacja ogólna.",
+        hak:"Para RVS / Q-sort: Rokeach RANGUJE (kolejka), Q-sort wymusza ROZKŁAD NORMALNY."},
+  q:[
+   {t:"Co porównuje RVS?", a:["Hierarchię wartości instrumentalnych i ostatecznych","Style radzenia sobie ze stresem","Kompetencje społeczne"], c:0, g:"s",
+    why:"Style radzenia sobie to CISS, a kompetencje społeczne — PROKOS/KKS.",
+    hook:"Instrumentalne to środki, ostateczne to cele. Rokeach ustawia jedne i drugie.",
+    ex:"Wartości instrumentalne i ostateczne."},
+   {t:"Jakim typem skali jest RVS?", a:["Skalą rangową — badany fizycznie porządkuje wartości","Pięciostopniową skalą Likerta","Skalą dychotomiczną tak/nie"], c:0, g:"",
+    why:"To dlatego RVS nie daje wyników znormalizowanych w klasycznym sensie ilościowym.",
+    hook:"Rokeach nie punktuje — ustawia w kolejce.",
+    ex:"Skala rangowa, porządkowanie wartości."},
+   {t:"Czym RVS różni się od techniki Q-sort?", a:["RVS ranguje wartości, Q-sort wymusza rozkład normalny","RVS wymusza rozkład normalny, Q-sort ranguje","Oba dają wyniki znormalizowane"], c:0, g:"",
+    why:"Obie metody polegają na fizycznym porządkowaniu, ale tylko Q-sort narzuca przymusową oś tworzącą rozkład normalny.",
+    hook:"Rokeach ustawia w kolejce, Q-sort wciska w dzwon Gaussa.",
+    ex:"RVS ranguje, Q-sort wymusza rozkład."}]},
+
+ {code:"WKP", full:"WKP — Wielowymiarowy Kwestionariusz Preferencji",
+  card:{mierzy:"Zainteresowania zawodowe: rodzaj preferowanych czynności (np. biologiczne, kierownicze) oraz preferowane warunki pracy.",
+        budowa:"133 stwierdzenia.",
+        kto:"Młodzież i dorośli, szczególnie w doradztwie zawodowym.",
+        hak:"Wynikiem WKP jest SUGESTIA KONKRETNYCH ZAWODÓW, a nie profil cech."},
+  q:[
+   {t:"Ile stwierdzeń ma WKP?", a:["133","116","100"], c:0, g:"n",
+    why:"WKP: 133 stwierdzenia. 116 pozycji ma MSEI, a 100 pozycji — FCZ-KT(R).",
+    hook:"Sto trzydzieści trzy pytania i wychodzi ci zawód.",
+    ex:"Sto trzydzieści trzy stwierdzenia."},
+   {t:"Co bada WKP?", a:["Zainteresowania zawodowe: czynności i warunki pracy","Kompetencje społeczne","Relacje rodzinne"], c:0, g:"",
+    why:"Kompetencje społeczne to PROKOS/KKS, a relacje rodzinne — KRR.",
+    hook:"WKP pyta, co lubisz robić i w jakich warunkach.",
+    ex:"Preferowane czynności i warunki pracy."},
+   {t:"Co jest wynikiem badania WKP?", a:["Sugestia konkretnych zawodów","Iloraz inteligencji","Wskaźnik Ogólnego Przystosowania"], c:0, g:"",
+    why:"IQ dają testy zadaniowe, a WOP pochodzi z RISB.",
+    hook:"WKP kończy zdaniem: „powinnaś zostać…”.",
+    ex:"Sugestia konkretnych zawodów."},
+   {t:"Jakiego rodzaju czynności bada WKP?", a:["Na przykład biologiczne i kierownicze","Na przykład asertywne i kooperacyjne","Na przykład zadaniowe i unikowe"], c:0, g:"s",
+    why:"Asertywne i kooperacyjne to kompetencje PROKOS, a zadaniowe i unikowe to style CISS.",
+    hook:"WKP pyta, czy wolisz hodować, czy rządzić.",
+    ex:"Czynności biologiczne, kierownicze i podobne."}]},
+
+ {code:"PROKOS", full:"PROKOS / KKS — Profil Kompetencji Społecznych",
+  card:{mierzy:"Samopomiar kompetencji społecznych: asertywnych, kooperacyjnych, towarzyskich, społecznikowskich oraz zaradności.",
+        budowa:"90 itemów: 60 diagnostycznych i 30 buforowych, ocenianych na 4-stopniowej skali pod kątem tego, na ile osoba „czuje się” kompetentna wobec danego zadania.",
+        kto:"Młodzież i dorośli.",
+        hak:"To SAMOOPIS poczucia kompetencji, a nie test wykonaniowy sprawdzający realne umiejętności."},
+  q:[
+   {t:"Z ilu itemów składa się PROKOS?", a:["90 (60 diagnostycznych + 30 buforowych)","100","33"], c:0, g:"n",
+    why:"PROKOS: 90 itemów, w tym 30 buforowych. 100 pozycji ma FCZ-KT(R), a 33 itemy — INTE.",
+    hook:"Sześćdziesiąt pracuje, trzydzieści buforuje — razem dziewięćdziesiąt.",
+    ex:"Dziewięćdziesiąt itemów, sześćdziesiąt diagnostycznych."},
+   {t:"Jakie kompetencje mierzy PROKOS?", a:["Asertywne, kooperacyjne, towarzyskie, społecznikowskie i zaradność","Wsparcie, zaangażowanie, deprecjację","Zadaniowe, emocjonalne, unikowe"], c:0, g:"s",
+    why:"Odpowiedź b) to wymiary KKM, a c) to style CISS.",
+    hook:"A-K-T-S-Z: Asertywny Kooperant Towarzyski Społecznik Zaradny.",
+    ex:"Asertywne, kooperacyjne, towarzyskie, społecznikowskie, zaradność."},
+   {t:"Czym jest PROKOS pod względem metody?", a:["Samoopisem poczucia kompetencji","Testem wykonaniowym umiejętności","Techniką projekcyjną"], c:0, g:"",
+    why:"Badany ocenia, na ile CZUJE SIĘ kompetentny — nie wykonuje zadań społecznych.",
+    hook:"PROKOS pyta o poczucie kompetencji, nie sprawdza jej w boju.",
+    ex:"Samoopis poczucia kompetencji społecznych."}]},
+
+ {code:"INTE", full:"INTE — Kwestionariusz Inteligencji Emocjonalnej",
+  card:{mierzy:"Efektywność przetwarzania informacji o emocjach własnych i cudzych (wykorzystywanie emocji, rozpoznawanie ich) — na podstawie samoopisu.",
+        budowa:"33 itemy wyliczające 3 wskaźniki.",
+        kto:"Populacja ogólna.",
+        autor:"Teoria Saloveya i Mayera.",
+        hak:"Ta sama teoria co TRE, ale INTE to SAMOOPIS, a TRE test wykonawczy."},
+  q:[
+   {t:"Ile itemów ma INTE?", a:["33","30","48"], c:0, g:"n",
+    why:"INTE: 33 itemy. 30 zadań mają TRE i MMSE, a 48 stwierdzeń — CISS.",
+    hook:"INTE trzydzieści trzy, TRE trzydzieści. Trójka różnicy, jedna teoria.",
+    ex:"Trzydzieści trzy itemy."},
+   {t:"Ile wskaźników wylicza INTE?", a:["3","7","5"], c:0, g:"s",
+    why:"3 wskaźniki. 7 skal ma FCZ-KT(R), a 5 części — TRE.",
+    hook:"Trzydzieści trzy itemy, trzy wskaźniki — same trójki.",
+    ex:"Trzy wskaźniki."},
+   {t:"Na jakiej teorii opiera się INTE?", a:["Na teorii Saloveya i Mayera","Na teorii Gardnera","Na teorii Bandury"], c:0, g:"",
+    why:"Bandura stoi za GSES. INTE dzieli teorię z TRE, różni je metoda pomiaru.",
+    hook:"Salovey i Mayer dwa razy: wykonawczo TRE, samoopisowo INTE.",
+    ex:"Teoria Saloveya i Mayera."},
+   {t:"Co konkretnie mierzy INTE?", a:["Efektywność przetwarzania informacji o emocjach własnych i cudzych","Zdolność rozwiązywania zadań o emocjach","Nasilenie 24 rodzajów emocji wobec wspomnienia"], c:0, g:"",
+    why:"Rozwiązywanie zadań o emocjach to wykonawczy TRE, a 24 rodzaje emocji to MKS Hermansa.",
+    hook:"INTE pyta, jak radzisz sobie z emocjami — swoimi i cudzymi.",
+    ex:"Przetwarzanie informacji o emocjach własnych i cudzych."}]},
+
+ {code:"KRR", full:"KRR — Kwestionariusz Relacji Rodzinnych",
+  card:{mierzy:"Relacje rodzinne widziane oczami nastolatka: jak postrzega związek rodziców, relacje z matką i ojcem oraz jak wyobraża sobie ich ocenę własnej osoby.",
+        budowa:"Składa się z wielu arkuszy.",
+        kto:"Młodzież w wieku 15–20 lat.",
+        hak:"KRR to SAMOOPIS nastolatka — nie technika projekcyjna (jak TSR) ani badanie pary (jak KKM)."},
+  q:[
+   {t:"Kogo bada KRR?", a:["Młodzież w wieku 15–20 lat","Pary małżeńskie","Dzieci w wieku przedszkolnym"], c:0, g:"w",
+    why:"Pary małżeńskie bada KKM, a emocje dzieci wobec rodziny — TSR.",
+    hook:"Piętnaście–dwadzieścia: nastolatek opowiada o swoim domu.",
+    ex:"Młodzież w wieku 15–20 lat."},
+   {t:"Co bada KRR?", a:["Jak nastolatek postrzega związek rodziców i relacje z matką/ojcem","Emocje dziecka wrzucane do pudełek","Zachowania komunikacyjne w małżeństwie"], c:0, g:"",
+    why:"Odpowiedź b) to TSR, a c) to KKM. Trzy narzędzia rodzinne, trzy różne perspektywy.",
+    hook:"KRR = kwestionariusz nastolatka; TSR = pudełka dziecka; KKM = para o sobie.",
+    ex:"Percepcję relacji rodzinnych przez nastolatka."},
+   {t:"Jak zbudowany jest KRR?", a:["Składa się z wielu arkuszy","Z dwóch wersji po 30 pozycji","Z 90 itemów, w tym 30 buforowych"], c:0, g:"n",
+    why:"Dwie wersje po 30 pozycji ma KKM, a 90 itemów z buforowymi — PROKOS.",
+    hook:"KRR to plik arkuszy, nie jedna kartka.",
+    ex:"Składa się z wielu arkuszy."}]},
+
+ {code:"KKM", full:"KKM — Kwestionariusz Komunikacji Małżeńskiej",
+  card:{mierzy:"Zachowania komunikacyjne w małżeństwie.",
+        budowa:"Dwie wersje po 30 pozycji do wzajemnej oceny zachowań własnych i partnera na wymiarach: wsparcie, zaangażowanie i deprecjacja.",
+        kto:"Pary małżeńskie.",
+        hak:"Wymiary wsparcie / zaangażowanie / deprecjacja należą wyłącznie do KKM."},
+  q:[
+   {t:"Jakie wymiary ocenia KKM?", a:["Wsparcie, zaangażowanie, deprecjację","Asertywność, kooperację, zaradność","Zadanie, emocje, unikanie"], c:0, g:"s",
+    why:"Odpowiedź b) to PROKOS, a c) to CISS. Wszystkie trzy są trójelementowe — stąd pomyłki.",
+    hook:"W małżeństwie: wspierasz, angażujesz się albo deprecjonujesz.",
+    ex:"Wsparcie, zaangażowanie, deprecjacja."},
+   {t:"Jak zbudowany jest KKM?", a:["Dwie wersje po 30 pozycji: ocena siebie i partnera","90 itemów w jednej wersji","133 stwierdzenia"], c:0, g:"n",
+    why:"90 itemów ma PROKOS, a 133 stwierdzenia — WKP.",
+    hook:"Dwie wersje po trzydzieści: ty o sobie, ty o nim.",
+    ex:"Dwie wersje po trzydzieści pozycji."},
+   {t:"Kogo bada KKM?", a:["Pary małżeńskie","Młodzież 15–20 lat","Rodziny z małymi dziećmi"], c:0, g:"w",
+    why:"Młodzież 15–20 lat bada KRR, a dzieci w kontekście rodziny — TSR.",
+    hook:"KKM to jedyne narzędzie badające parę, nie osobę.",
+    ex:"Pary małżeńskie."}]}
+ ],
+ bossQ:[
+  {t:"„567 pytań tak/nie, 121 skal, konstrukcja empiryczna, analiza profilowa.”", a:["MMPI-2","NEO-PI-R","ACL"], c:0,
+   why:"Tylko MMPI-2 ma 567 pytań i 121 skal.", hook:"Pięć-sześć-siedem i sto dwadzieścia jeden — Minnesota.", ex:"MMPI-2 — Minnesocki Inwentarz Osobowości."},
+  {t:"„100 pozycji, 7 skal, teoria Strelaua, formalny aspekt zachowania.”", a:["FCZ-KT(R)","MSEI","EPQ-R"], c:0,
+   why:"Setka pozycji i siedem skal temperamentu to Strelau.", hook:"Sto i siedem — Strelau.", ex:"FCZ-KT(R) — Kwestionariusz Temperamentu."},
+  {t:"„116 pozycji, 11 skal, w tym witalność i atrakcyjność fizyczna.”", a:["MSEI","FCZ-KT(R)","SES"], c:0,
+   why:"Witalność i atrakcyjność fizyczna to skale MSEI, nie FCZ-KT.", hook:"Witalność zawsze prowadzi do MSEI.", ex:"MSEI — Wielowymiarowy Kwestionariusz Samooceny."},
+  {t:"„10 itemów, jednowymiarowe, świadoma globalna samoocena jako stabilna cecha.”", a:["SES","MSEI","PK"], c:0,
+   why:"Jednowymiarowość i 10 itemów to Rosenberg.", hook:"Jeden wymiar, dziesięć itemów — Rosenberg.", ex:"SES — Skala Samooceny Rosenberga."},
+  {t:"„133 stwierdzenia, a wynikiem jest sugestia konkretnych zawodów.”", a:["WKP","PROKOS","APIS-Z"], c:0,
+   why:"Doradztwo zawodowe i 133 stwierdzenia to WKP.", hook:"Sto trzydzieści trzy i masz zawód.", ex:"WKP — Wielowymiarowy Kwestionariusz Preferencji."},
+  {t:"„90 itemów: 60 diagnostycznych, 30 buforowych, skala 4-stopniowa.”", a:["PROKOS / KKS","CISS","MSEI"], c:0,
+   why:"Pozycje buforowe to znak rozpoznawczy PROKOS.", hook:"Bufory zdradzają PROKOS.", ex:"PROKOS — Profil Kompetencji Społecznych."},
+  {t:"„33 itemy, 3 wskaźniki, samoopisowy pomiar inteligencji emocjonalnej.”", a:["INTE","TRE","CISS"], c:0,
+   why:"Samoopis plus 33 itemy to INTE; TRE jest wykonawcze.", hook:"Same trójki — INTE.", ex:"INTE — Kwestionariusz Inteligencji Emocjonalnej."},
+  {t:"„48 stwierdzeń, 5-stopniowa skala, trzy style radzenia sobie.”", a:["CISS","LOT-R","PROKOS"], c:0,
+   why:"48 stwierdzeń i trzy style to CISS.", hook:"Czterdzieści osiem na trzy style ucieczki.", ex:"CISS — Kwestionariusz Radzenia Sobie."},
+  {t:"„300 przymiotników, 37 skal, badanie Ja realnego i idealnego.”", a:["ACL","NEO-PI-R","MMPI-2"], c:0,
+   why:"Przymiotniki i modyfikowalna instrukcja to Lista Gougha.", hook:"Przymiotniki zawsze prowadzą do ACL.", ex:"ACL — Lista Przymiotników Gougha."},
+  {t:"„Dwie wersje po 30 pozycji: wsparcie, zaangażowanie, deprecjacja.”", a:["KKM","KRR","PROKOS"], c:0,
+   why:"Wzajemna ocena partnerów na trzech wymiarach to KKM.", hook:"Deprecjacja zdradza małżeństwo.", ex:"KKM — Kwestionariusz Komunikacji Małżeńskiej."},
+  {t:"„10 itemów, teoria Bandury, normy dla 7 grup klinicznych.”", a:["GSES","LOT-R","SES"], c:0,
+   why:"Bandura i grupy kliniczne to GSES.", hook:"Bandura na oddziale — GSES.", ex:"GSES — Skala Uogólnionej Własnej Skuteczności."},
+  {t:"„5 itemów; przykładowa pozycja: »Gdybym mógł jeszcze raz przeżyć swoje życie…«”", a:["SWLS","LOT-R","PK"], c:0,
+   why:"Pięć itemów o subiektywnej jakości życia to SWLS.", hook:"Pięć zdań na całe życie.", ex:"SWLS — Skala Satysfakcji z Życia."},
+  {t:"„Rangowe porządkowanie wartości instrumentalnych i ostatecznych; brak klasycznej normalizacji.”", a:["RVS","Q-sort","ACL"], c:0,
+   why:"Wartości instrumentalne i ostateczne to Rokeach; Q-sort wymusza rozkład normalny.", hook:"Wartości w kolejce — Rokeach.", ex:"RVS — Skala Wartości Rokeacha."}
+ ]
+},
+{
+ id:"proj", emoji:"🎭", name:"Las Projekcji", hue:"var(--c3)", tint:"#1f1830",
+ intro:"Metody z paradygmatu psychodynamicznego, na materiale nieustrukturyzowanym. Omijają świadome mechanizmy obronne, by dotrzeć do nieświadomych procesów, konfliktów i tłumionych potrzeb.",
+ boss:{name:"Plama Atramentowa", badge:"🏅 Tłumacz Nieświadomego"},
+ stations:[
+ {code:"RISB", full:"RISB — Test Zdań Niedokończonych Rottera",
+  card:{mierzy:"Omija silne mechanizmy obronne, diagnozuje konflikty i pozwala obliczyć Wskaźnik Ogólnego Przystosowania (WOP) — przez analizę ilościową ORAZ bardzo istotną analizę jakościową (opuszczenia, poprawki).",
+        budowa:"Metoda półprojekcyjna. Najmocniej ustrukturalizowany test z tej grupy: badany swobodnie dokańcza rozpoczęte zdania.",
+        kto:"Istnieją wersje dla dzieci, młodzieży, studentów i dorosłych.",
+        hak:"RISB to jedyna metoda z tej krainy dająca wskaźnik ilościowy (WOP) — i najmocniej ustrukturalizowana."},
+  q:[
+   {t:"Jaką metodą jest RISB?", a:["Półprojekcyjną, najmocniej ustrukturalizowaną w grupie","Całkowicie nieustrukturyzowaną","Wykonawczą"], c:0, g:"",
+    why:"Całkowicie nieustrukturyzowany materiał ma Rorschach — to przeciwny biegun tej samej krainy.",
+    hook:"Rotter daje początek zdania, Rorschach nie daje nic.",
+    ex:"Metoda półprojekcyjna, silnie ustrukturalizowana."},
+   {t:"Jaki wskaźnik pozwala obliczyć RISB?", a:["Wskaźnik Ogólnego Przystosowania (WOP)","IQ niewerbalne","Profil kliniczny 121 skal"], c:0, g:"s",
+    why:"IQ niewerbalne daje Leiter-3, a 121 skal to MMPI-2.",
+    hook:"Rotter dokańcza zdania i liczy WOP.",
+    ex:"Wskaźnik Ogólnego Przystosowania (WOP)."},
+   {t:"Co jest szczególnie istotne w analizie jakościowej RISB?", a:["Opuszczenia i poprawki","Czas reakcji na planszę","Liczba użytych tablic"], c:0, g:"",
+    why:"To, czego badany NIE napisał lub co poprawił, jest równie diagnostyczne co treść.",
+    hook:"Skreślenie mówi więcej niż zdanie.",
+    ex:"Opuszczenia i poprawki badanego."},
+   {t:"Kogo bada RISB?", a:["Dzieci, młodzież, studentów i dorosłych","Wyłącznie dorosłych","Wyłącznie dzieci"], c:0, g:"w",
+    why:"RISB ma osobne wersje dla czterech grup. Wyłącznie dorosłych bada TAT, a wyłącznie dzieci — CAT.",
+    hook:"Cztery wersje: od dziecka po dorosłego. Zdania da się dokończyć w każdym wieku.",
+    ex:"Dzieci, młodzież, studenci, dorośli."},
+   {t:"Jakie dwa rodzaje analizy stosuje się w RISB?", a:["Ilościową, dającą WOP, oraz bardzo istotną jakościową","Wyłącznie ilościową","Wyłącznie jakościową"], c:0, g:"",
+    why:"WOP to część ilościowa, ale źródło podkreśla wagę analizy jakościowej: opuszczeń i poprawek.",
+    hook:"Rotter liczy WOP, ale patrzy też na to, czego nie napisałaś.",
+    ex:"Analiza ilościowa i jakościowa."}]},
+
+ {code:"TAT", full:"TAT — Test Apercepcji Tematycznej",
+  card:{mierzy:"System osobistej narracji, potrzeby, funkcjonowanie mechanizmów obronnych, ego i superego.",
+        budowa:"Częściowo ustrukturalizowany: 30 tablic (w badaniu podaje się zwykle 10) z niejednoznacznymi scenami z postaciami. Badany układa dramatyczną historię: przeszłość, uczucia bohaterów, finał.",
+        kto:"Dorośli.",
+        autor:"Teoria potrzeb Murraya.",
+        hak:"30 tablic w komplecie, 10 w badaniu — to ulubiona podmianka liczb."},
+  q:[
+   {t:"Ile tablic ma TAT?", a:["30, w badaniu podaje się zwykle 10","10, w badaniu podaje się 30","20, wszystkie podawane naraz"], c:0, g:"n",
+    why:"Odwrócenie tych liczb to najczęstszy dystraktor. Rorschach ma dokładnie 10 plansz — stąd zamieszanie.",
+    hook:"TAT ma trzydzieści w pudełku, dziesięć na stole. Rorschach ma dziesięć i koniec.",
+    ex:"Trzydzieści tablic, podaje się dziesięć."},
+   {t:"Na jakiej teorii opiera się TAT?", a:["Na teorii potrzeb Murraya","Na teorii Rottera","Na koncepcji Rorschacha"], c:0, g:"",
+    why:"Rotter stworzył RISB. Murray to potrzeby i narracja.",
+    hook:"Murray dał potrzeby, TAT każe je opowiedzieć.",
+    ex:"Teoria potrzeb Murraya."},
+   {t:"Kogo bada TAT?", a:["Dorosłych","Dzieci","Pary małżeńskie"], c:0, g:"w",
+    why:"Dla dzieci przeznaczony jest CAT — to podstawowa różnica w tej parze.",
+    hook:"TAT dla dorosłych, CAT dla dzieci. Jedna litera, inna grupa.",
+    ex:"Dorośli."},
+   {t:"Jaki stopień strukturalizacji ma TAT?", a:["Częściowo ustrukturalizowany","Całkowicie nieustrukturyzowany","Najmocniej ustrukturalizowany w grupie"], c:0, g:"",
+    why:"Całkowicie nieustrukturyzowany to Rorschach, a najmocniej ustrukturalizowany — RISB.",
+    hook:"Skala strukturalizacji: RISB najwyżej, TAT w środku, Rorschach na dnie.",
+    ex:"Częściowo ustrukturalizowany materiał."},
+   {t:"Co musi zawierać historia układana w TAT?", a:["Przeszłość, uczucia bohaterów i finał","Opis tego, co dokładnie widać na tablicy","Ocenę, na ile scena pasuje do badanego"], c:0, g:"s",
+    why:"TAT nie jest opisem tablicy: badany układa dramatyczną historię z przeszłością i zakończeniem.",
+    hook:"Skąd to się wzięło, co oni czują, jak się skończy.",
+    ex:"Przeszłość, uczucia bohaterów, finał."}]},
+
+ {code:"CAT", full:"CAT-A / CAT-H / CAT-S — Test Apercepcji Tematycznej dla dzieci",
+  card:{mierzy:"Ten sam cel co TAT, ale diagnozuje konflikty charakterystyczne dla wieku dziecięcego.",
+        budowa:"Tablice przedstawiające zwierzęta (CAT-A) bądź ludzi (CAT-H).",
+        kto:"Dzieci.",
+        hak:"A jak Animals, H jak Humans. Litera po myślniku decyduje o materiale."},
+  q:[
+   {t:"Co przedstawiają tablice CAT-A?", a:["Zwierzęta","Ludzi","Plamy atramentowe"], c:0, g:"",
+    why:"Ludzi przedstawia CAT-H, a plamy atramentowe to Rorschach.",
+    hook:"A jak Animals, H jak Humans.",
+    ex:"Tablice ze zwierzętami."},
+   {t:"Czym CAT różni się od TAT?", a:["Diagnozuje konflikty charakterystyczne dla wieku dziecięcego","Mierzy iloraz inteligencji dzieci","Bada relacje małżeńskie"], c:0, g:"",
+    why:"Cel jest tożsamy z TAT; różni się grupa wiekowa i typ konfliktów.",
+    hook:"Ten sam cel, mniejszy bohater.",
+    ex:"Diagnozuje konflikty wieku dziecięcego."}]},
+
+ {code:"Rorschach", tile:"RORSCH", full:"Test Rorschacha",
+  card:{mierzy:"Głęboką diagnozę osobowości, problemy emocjonalne i psychopatologię.",
+        budowa:"Całkowicie nieustrukturyzowany materiał: 10 plansz z plamami atramentowymi. Pytanie brzmi „co by to mogło być?”. Skomplikowane wyliczanie wskaźników interpretacyjnych.",
+        kto:"Dorośli i dzieci. Wymaga ogromnego doświadczenia klinicznego.",
+        hak:"10 plansz — nie myl z 30 tablicami TAT. Materiał CAŁKOWICIE nieustrukturyzowany."},
+  q:[
+   {t:"Ile plansz ma Test Rorschacha?", a:["10","30","14"], c:0, g:"n",
+    why:"Rorschach: 10 plansz. 30 tablic ma TAT, a 14 to liczba kryteriów oceny TCT-DP.",
+    hook:"Dziesięć plam i ani jednej więcej.",
+    ex:"Dziesięć plansz z plamami atramentowymi."},
+   {t:"Jaki jest stopień strukturalizacji materiału Rorschacha?", a:["Całkowicie nieustrukturyzowany","Częściowo ustrukturalizowany","Silnie ustrukturalizowany"], c:0, g:"",
+    why:"Częściowo ustrukturalizowany jest TAT, silnie — RISB.",
+    hook:"Plama nie ma kształtu, więc nie ma i struktury.",
+    ex:"Materiał całkowicie nieustrukturyzowany."},
+   {t:"Jakie pytanie zadaje się badanemu w teście Rorschacha?", a:["„Co by to mogło być?”","„Narysuj drzewo owocowe”","„Dokończ to zdanie”"], c:0, g:"",
+    why:"Drzewo owocowe to Test Drzewa, a dokańczanie zdań to RISB.",
+    hook:"Jedno pytanie, dziesięć razy: co by to mogło być?",
+    ex:"Pytanie: co by to mogło być?"},
+   {t:"Czego wymaga stosowanie testu Rorschacha?", a:["Ogromnego doświadczenia klinicznego","Wyłącznie znajomości klucza","Badania grupowego"], c:0, g:"",
+    why:"Skomplikowane wyliczanie wskaźników interpretacyjnych czyni z niego narzędzie dla doświadczonych klinicystów.",
+    hook:"Plamy są proste, interpretacja nie.",
+    ex:"Ogromnego doświadczenia klinicznego."}]},
+
+ {code:"Rys.Rodziny", tile:"RYS.ROD.", full:"Test Rysunku Rodziny (i grupa testów „Narysuj…”)",
+  card:{mierzy:"Diagnozę relacji i konfliktów w rodzinie.",
+        budowa:"Biała kartka A4 i kredki.",
+        kto:"Najczęściej dzieci i rodziny.",
+        hak:"Współcześnie zaleca się interpretację WYŁĄCZNIE CAŁOŚCIOWĄ — nie na bazie pojedynczych oznak czy kresek."},
+  q:[
+   {t:"Jakiego materiału używa Test Rysunku Rodziny?", a:["Białej kartki A4 i kredek","Dziesięciu plansz","Kartoników i pudełek"], c:0, g:"",
+    why:"Plansze to Rorschach, a kartoniki wrzucane do pudełek to TSR.",
+    hook:"Kartka i kredki — nic więcej nie potrzeba.",
+    ex:"Biała kartka A4 i kredki."},
+   {t:"Jak współcześnie zaleca się interpretować rysunek rodziny?", a:["Wyłącznie całościowo, nie na bazie pojedynczych oznak","Analizując każdą kreskę osobno","Wyłącznie ilościowo, przez wskaźniki"], c:0, g:"",
+    why:"To ta sama zasada, przez którą zdyskredytowano Rysunek postaci ludzkiej i Dom-Drzewo-Człowiek: nie wolno przypisywać ukrytych cech pojedynczym oznakom.",
+    hook:"Cały obraz albo nic. Pojedyncza kreska nic nie znaczy.",
+    ex:"Wyłącznie całościowo, nie pojedyncze oznaki."}]},
+
+ {code:"T.Drzewa", tile:"DRZEWO", full:"Test Drzewa",
+  card:{mierzy:"Diagnozę osobowości i psychopatologii.",
+        budowa:"Badany dostaje kartkę i ołówek z prośbą: „narysuj drzewo owocowe”.",
+        kto:"Populacja ogólna.",
+        hak:"Metoda NIE spełnia rygorystycznych wymogów psychometrycznych — ale UWAGA: nie znajduje się na liście narzędzi zdyskredytowanych."},
+  q:[
+   {t:"Jaka instrukcja pada w Teście Drzewa?", a:["„Narysuj drzewo owocowe”","„Narysuj swoją rodzinę”","„Narysuj dom, drzewo i człowieka”"], c:0, g:"",
+    why:"Odpowiedź c) to zdyskredytowany test Dom-Drzewo-Człowiek — kusząco podobny.",
+    hook:"Owocowe, nie byle jakie. I jedno drzewo, nie cała posesja.",
+    ex:"Prośba: narysuj drzewo owocowe."},
+   {t:"Jakie ograniczenie ma Test Drzewa?", a:["Nie spełnia rygorystycznych wymogów psychometrycznych","Nie posiada norm dla dorosłych","Wymaga badania grupowego"], c:0, g:"",
+    why:"Źródło wskazuje słabość psychometryczną, ale nie umieszcza Testu Drzewa na liście zdyskredytowanych — inaczej niż Dom-Drzewo-Człowiek.",
+    hook:"Słabe psychometrycznie, ale jeszcze nie na cmentarzu.",
+    ex:"Nie spełnia rygorystycznych wymogów psychometrycznych."}]},
+
+ {code:"TSR", full:"TSR — Test Stosunków Rodzinnych",
+  card:{mierzy:"Emocje dziecka wobec członków rodziny, w tym te ukryte, do których brakuje mu wglądu i możliwości werbalizacji.",
+        budowa:"Łączy test psychometryczny z techniką projekcyjną. Dziecko wrzuca karteczki z opisami emocji i zachowań do pudełek przypisanych podczas wywiadu konkretnym członkom rodziny — lub do pudełka „nikt”.",
+        kto:"Dzieci; istnieje też wersja diagnozująca emocje między małżonkami.",
+        hak:"Pudełko „nikt” to znak rozpoznawczy TSR."},
+  q:[
+   {t:"Na czym polega badanie TSR?", a:["Na wrzucaniu karteczek z emocjami do pudełek przypisanych członkom rodziny","Na rysowaniu rodziny kredkami","Na dokańczaniu rozpoczętych zdań"], c:0, g:"",
+    why:"Rysowanie rodziny to Test Rysunku Rodziny, a dokańczanie zdań — RISB.",
+    hook:"Pudełka zamiast kredek.",
+    ex:"Wrzucanie karteczek do pudełek członków rodziny."},
+   {t:"Jak metodologicznie klasyfikuje się TSR?", a:["Łączy test psychometryczny z techniką projekcyjną","Jest czysto projekcyjny","Jest czysto psychometryczny"], c:0, g:"",
+    why:"To hybryda — dlatego bywa mylona z obiema grupami.",
+    hook:"TSR ma jedną nogę w psychometrii, drugą w projekcji.",
+    ex:"Hybryda: psychometria plus projekcja."},
+   {t:"Jakie dodatkowe pudełko występuje w TSR?", a:["Pudełko „nikt”","Pudełko „wszyscy”","Pudełko „ja”"], c:0, g:"",
+    why:"Pudełko „nikt” pozwala dziecku odrzucić emocję bez przypisywania jej komukolwiek — i samo w sobie jest diagnostyczne.",
+    hook:"Jak emocja do nikogo nie pasuje, leci do pudełka „nikt”.",
+    ex:"Pudełko „nikt”."}]}
+ ],
+ bossQ:[
+  {t:"„10 plansz, materiał całkowicie nieustrukturyzowany, pytanie »co by to mogło być?«”", a:["Test Rorschacha","TAT","RISB"], c:0,
+   why:"Dziesięć plam i brak jakiejkolwiek struktury to Rorschach.", hook:"Dziesięć plam — Rorschach.", ex:"Test Rorschacha."},
+  {t:"„30 tablic, podaje się 10, teoria potrzeb Murraya, dorośli.”", a:["TAT","CAT-A","Rorschach"], c:0,
+   why:"Murray i dramatyczna historia do obrazka to TAT.", hook:"Murray plus historia równa się TAT.", ex:"TAT — Test Apercepcji Tematycznej."},
+  {t:"„Dokańczanie zdań, Wskaźnik Ogólnego Przystosowania, najmocniej ustrukturalizowana z projekcyjnych.”", a:["RISB","TAT","TSR"], c:0,
+   why:"WOP występuje wyłącznie w RISB.", hook:"WOP zdradza Rottera.", ex:"RISB — Test Zdań Niedokończonych Rottera."},
+  {t:"„Tablice ze zwierzętami; konflikty charakterystyczne dla wieku dziecięcego.”", a:["CAT-A","TAT","TSR"], c:0,
+   why:"Zwierzęta na tablicach to CAT-A.", hook:"Zwierzęta na tablicy — CAT-A.", ex:"CAT-A — dziecięcy test apercepcji."},
+  {t:"„Karteczki z emocjami i pudełka przypisane rodzinie, w tym pudełko »nikt«.”", a:["TSR","Test Rysunku Rodziny","KRR"], c:0,
+   why:"Pudełka i karteczki to Test Stosunków Rodzinnych.", hook:"Pudełko „nikt” — TSR.", ex:"TSR — Test Stosunków Rodzinnych."},
+  {t:"„Kartka i ołówek, jedna prośba: »narysuj drzewo owocowe«.”", a:["Test Drzewa","Dom-Drzewo-Człowiek","TCT-DP"], c:0,
+   why:"Dom-Drzewo-Człowiek to inny, zdyskredytowany test rysunkowy.", hook:"Owocowe drzewo, jedno i samotne.", ex:"Test Drzewa."},
+  {t:"„Biała kartka A4 i kredki; interpretacja wyłącznie całościowa.”", a:["Test Rysunku Rodziny","Test Drzewa","TSR"], c:0,
+   why:"Kredki i zalecenie interpretacji całościowej to Test Rysunku Rodziny.", hook:"Kredki plus całość — rysunek rodziny.", ex:"Test Rysunku Rodziny."}
+ ]
+},
+{
+ id:"wyw", emoji:"🏛️", name:"Twierdza Wywiadów", hue:"var(--c4)", tint:"#12281f",
+ intro:"Metody systemowe i wywiady ustrukturalizowane. Sztywne kodowanie, drzewka decyzyjne i diagnoza całych systemów.",
+ boss:{name:"Drzewko Decyzyjne", badge:"🏅 Kodyfikator"},
+ stations:[
+ {code:"SCID", full:"Wywiady standaryzowane (SCID, DIS, SCAN, CIDI)",
+  card:{mierzy:"Diagnozuje konkretne zaburzenia psychiczne według kryteriów DSM/ICD.",
+        budowa:"Przypominają „odczytywanie kwestionariusza”: pytania są ułożone z góry, a odpowiedzi podlegają sztywnemu kodowaniu (np. drzewka decyzyjne).",
+        kto:"Osoby podejrzewane o konkretne zaburzenia kliniczne.",
+        hak:"To wywiad BARDZO rygorystyczny — brak swobody badacza jest cechą, nie wadą."},
+  q:[
+   {t:"Według jakich kryteriów diagnozują wywiady standaryzowane?", a:["Według DSM/ICD","Według teorii potrzeb Murraya","Według Wielkiej Piątki"], c:0, g:"",
+    why:"To wywiady klasyfikacyjne, przywiązane do systemów diagnostycznych.",
+    hook:"Wywiad standaryzowany czyta z DSM jak z menu.",
+    ex:"Kryteria DSM lub ICD."},
+   {t:"Jak kodowane są odpowiedzi w wywiadzie standaryzowanym?", a:["Sztywno, np. przez drzewka decyzyjne","Swobodnie, według interpretacji badacza","Przez rangowanie ważności"], c:0, g:"",
+    why:"Rangowanie to RVS. Swoboda interpretacji to domena technik projekcyjnych.",
+    hook:"Standaryzowany wywiad to czytanie kwestionariusza na głos.",
+    ex:"Sztywne kodowanie, drzewka decyzyjne."},
+   {t:"Kogo bada się wywiadami standaryzowanymi?", a:["Osoby podejrzewane o konkretne zaburzenia kliniczne","Grupy w szkole i w pracy","Pary małżeńskie"], c:0, g:"w",
+    why:"Grupy bada socjometria, a pary — KKM.",
+    hook:"Podejrzenie konkretnego zaburzenia to bilet na wywiad.",
+    ex:"Osoby podejrzewane o konkretne zaburzenia."}]},
+
+ {code:"DISCO", full:"DISCO — wywiad standaryzowany",
+  card:{mierzy:"Wywiad standaryzowany ukierunkowany na diagnozę autyzmu.",
+        budowa:"Jak pozostałe wywiady standaryzowane: pytania ułożone z góry, sztywne kodowanie.",
+        kto:"Osoby podejrzewane o zaburzenia ze spektrum autyzmu.",
+        hak:"DISCO = autyzm. SIRS = symulowanie. Te dwa skróty trzeba znać z nazwiska."},
+  q:[
+   {t:"Do diagnozy czego służy DISCO?", a:["Autyzmu","Symulowania zaburzeń","Otępienia"], c:0, g:"",
+    why:"Symulowanie zaburzeń wykrywa SIRS, a otępienie przesiewa MMSE.",
+    hook:"DISCO tańczy w spektrum.",
+    ex:"Diagnoza autyzmu."}]},
+
+ {code:"SIRS", full:"SIRS — wywiad standaryzowany",
+  card:{mierzy:"Wywiad standaryzowany służący wykrywaniu symulowania zaburzeń.",
+        budowa:"Jak pozostałe wywiady standaryzowane: pytania z góry, sztywne kodowanie.",
+        kto:"Osoby, wobec których zachodzi podejrzenie symulacji.",
+        hak:"Jedyne narzędzie w materiale wprost nastawione na wykrywanie symulacji."},
+  q:[
+   {t:"Do wykrywania czego służy SIRS?", a:["Symulowania zaburzeń","Autyzmu","Depresji"], c:0, g:"",
+    why:"Autyzm to DISCO. SIRS pyta nie „co ci jest”, ale „czy to prawda”.",
+    hook:"SIRS: „Sir, czy pan aby nie udaje?”",
+    ex:"Wykrywanie symulowania zaburzeń."}]},
+
+ {code:"Socjometria", tile:"SOCJO", full:"Techniki socjometryczne (klasyczne Moreno, metoda 360 stopni)",
+  card:{mierzy:"Diagnozę systemu jako całości: relacje i jakość komunikacji między członkami organizacji.",
+        budowa:"Osoby badane dokonują wyborów — pozytywnych lub negatywnych — spośród innych członków grupy, ze względu na kryterium postawione przez badacza.",
+        kto:"Grupy: szkoła, miejsce pracy, oddziały w firmie.",
+        hak:"To jedyna metoda w materiale, której obiektem jest GRUPA, a nie osoba."},
+  q:[
+   {t:"Czego dotyczy diagnoza socjometryczna?", a:["Systemu jako całości: relacji i komunikacji w grupie","Osobowości pojedynczego badanego","Ilorazu inteligencji badanego grupowo"], c:0, g:"",
+    why:"Badanie grupowe APIS-em to wciąż diagnoza indywidualna prowadzona w grupie — socjometria mierzy samą grupę.",
+    hook:"Socjometria bada sieć, nie węzeł.",
+    ex:"Diagnoza systemu: relacje i komunikacja."},
+   {t:"Na czym polega procedura socjometryczna?", a:["Na dokonywaniu wyborów pozytywnych lub negatywnych wg kryterium badacza","Na sortowaniu kartoników na przymusowej osi","Na dokańczaniu zdań"], c:0, g:"",
+    why:"Sortowanie kartoników na przymusowej osi to Q-sort, a dokańczanie zdań to RISB.",
+    hook:"Wybierasz kogoś do czegoś — kryterium ustala badacz.",
+    ex:"Wybory pozytywne lub negatywne w grupie."},
+   {t:"Gdzie stosuje się techniki socjometryczne?", a:["W szkole, w miejscu pracy, na oddziałach w firmie","Wyłącznie w gabinecie klinicznym","Wyłącznie u par małżeńskich"], c:0, g:"w",
+    why:"To narzędzia organizacyjne i szkolne, w tym metoda 360 stopni.",
+    hook:"Wszędzie tam, gdzie ludzie tworzą grupę i muszą się dogadać.",
+    ex:"Grupy: szkoła, praca, zespoły firmowe."}]}
+ ],
+ bossQ:[
+  {t:"„Wywiad standaryzowany według DSM/ICD nastawiony na diagnozę autyzmu.”", a:["DISCO","SIRS","SCID"], c:0,
+   why:"Autyzm to DISCO.", hook:"DISCO tańczy w spektrum.", ex:"DISCO — wywiad standaryzowany."},
+  {t:"„Wywiad standaryzowany wykrywający symulowanie zaburzeń.”", a:["SIRS","DISCO","CIDI"], c:0,
+   why:"Symulacja to SIRS.", hook:"SIRS pyta, czy nie udajesz.", ex:"SIRS — wykrywanie symulacji."},
+  {t:"„Członkowie grupy wybierają się nawzajem według kryterium postawionego przez badacza.”", a:["Techniki socjometryczne","Wywiady standaryzowane","Q-sort"], c:0,
+   why:"Wybory w grupie to socjometria Moreno.", hook:"Wybory w grupie — Moreno.", ex:"Techniki socjometryczne."},
+  {t:"„Pytania ułożone z góry, sztywne kodowanie, drzewka decyzyjne.”", a:["Wywiady standaryzowane","Techniki socjometryczne","MKS"], c:0,
+   why:"Drzewka decyzyjne to znak wywiadów standaryzowanych.", hook:"Drzewko decyzyjne to zawsze wywiad.", ex:"Wywiady standaryzowane, np. SCID."},
+  {t:"„Metoda 360 stopni należy do tej rodziny narzędzi.”", a:["Techniki socjometryczne","Wywiady standaryzowane","Metody projekcyjne"], c:0,
+   why:"Metoda 360 stopni to nowoczesna odmiana socjometrii.", hook:"360 stopni to socjometria w firmie.", ex:"Techniki socjometryczne."},
+  {t:"„Przypomina odczytywanie kwestionariusza na głos przez badacza.”", a:["Wywiad standaryzowany","Kwestionariusz samoopisowy","Technika projekcyjna"], c:0,
+   why:"Kwestionariusz samoopisowy badany wypełnia sam — tu czyta badacz.", hook:"Badacz czyta, ty tylko odpowiadasz.", ex:"Wywiad standaryzowany."}
+ ]
+},
+{
+ id:"lab", emoji:"🧪", name:"Laboratorium Niestandardowe", hue:"var(--c5)", tint:"#2c1420",
+ intro:"Inne metody diagnozy: wymuszone rozkłady, macierze i wartościowania generowane przez samego badanego.",
+ boss:{name:"Widmo Wymuszonego Rozkładu", badge:"🏅 Alchemik Metody"},
+ stations:[
+ {code:"Q-sort", full:"Technika Q-sort / Metodologia Q",
+  card:{mierzy:"Wierny opis pomiaru „Ja” (realnego, idealnego), postrzegania swoich partnerów czy środowiska.",
+        budowa:"Wymusza fizyczne posortowanie dużej puli kartoników (lub zadań na komputerze) ze stwierdzeniami — na przymusowej osi tworzącej wymuszony rozkład normalny.",
+        kto:"Populacja ogólna.",
+        hak:"Uniemożliwia ciągłe unikanie i uciekanie w neutralne, środkowe odpowiedzi — to jej główna zaleta."},
+  q:[
+   {t:"Co wymusza technika Q-sort?", a:["Rozkład normalny przy sortowaniu kartoników","Rangowanie liniowe od najważniejszego","Odpowiedzi dychotomiczne tak/nie"], c:0, g:"",
+    why:"Rangowanie liniowe to RVS, a odpowiedzi dychotomiczne to MMPI-2.",
+    hook:"Q-sort wciska twoje odpowiedzi w dzwon Gaussa. Nie ma wyjścia.",
+    ex:"Wymuszony rozkład normalny odpowiedzi."},
+   {t:"Do czego służy Q-sort?", a:["Do opisu Ja realnego i idealnego oraz postrzegania partnerów","Do pomiaru patologii osobowości","Do pomiaru ilorazu inteligencji"], c:0, g:"",
+    why:"Patologię osobowości mierzy MMPI-2. Q-sort dzieli z ACL zainteresowanie strukturą Ja.",
+    hook:"Ja realne, ja idealne, mój partner, moje środowisko — wszystko na jednej osi.",
+    ex:"Opis Ja realnego, idealnego i otoczenia."},
+   {t:"Jaka jest główna zaleta Q-sort?", a:["Uniemożliwia ucieczkę w neutralne, środkowe odpowiedzi","Pozwala na szybkie badanie grupowe","Daje wynik znormalizowany ilościowo"], c:0, g:"",
+    why:"Szybkie badanie grupowe to APIS. Q-sort właśnie NIE daje klasycznej normalizacji ilościowej.",
+    hook:"Q-sort nie pozwala usiąść na środku.",
+    ex:"Uniemożliwia ucieczkę w odpowiedzi neutralne."}]},
+
+ {code:"MKS", full:"MKS / MKS 2000 — Metoda Konfrontacji z Sobą Hermansa",
+  card:{mierzy:"Daje głęboki wgląd; służy jako wsparcie w psychoterapii i poradnictwie.",
+        budowa:"Zaawansowana technika z grupy macierzowych. Badany sam generuje w toku rozmowy zbiór ważnych dla siebie pojęć i wspomnień (tzw. wartościowań), a następnie przypisuje każdej pozycji punkty odzwierciedlające nasilenie 24 różnych rodzajów emocji.",
+        kto:"Młodzież i dorośli, szczególnie w toku psychoterapii narracyjnej.",
+        autor:"Hermans.",
+        hak:"Liczba 24 dotyczy RODZAJÓW EMOCJI krzyżowanych z wartościowaniami — nie liczby pozycji ani skal."},
+  q:[
+   {t:"Do jakiej grupy technik należy MKS?", a:["Do technik macierzowych","Do technik projekcyjnych","Do prób zadaniowych"], c:0, g:"",
+    why:"MKS krzyżuje wartościowania z emocjami, tworząc macierz — stąd nazwa grupy.",
+    hook:"Macierz: wartościowania w wierszach, emocje w kolumnach.",
+    ex:"Zaawansowana technika macierzowa."},
+   {t:"Ile rodzajów emocji ocenia się w MKS?", a:["24","7","11"], c:0, g:"n",
+    why:"24 rodzaje emocji. 7 skal ma FCZ-KT(R), a 11 skal — MSEI.",
+    hook:"Dwadzieścia cztery emocje, jak dwadzieścia cztery godziny w dobie wspomnienia.",
+    ex:"Dwadzieścia cztery rodzaje emocji."},
+   {t:"Kto generuje treść pozycji w MKS?", a:["Sam badany w toku rozmowy","Badacz z podręcznika","Program komputerowy losowo"], c:0, g:"",
+    why:"To istota metody: wartościowania są osobiste, nie ma gotowej listy pozycji.",
+    hook:"Hermans nie daje pytań — każe ci je wymyślić o sobie.",
+    ex:"Sam badany, w toku rozmowy."},
+   {t:"Do czego głównie służy MKS?", a:["Jako wsparcie psychoterapii i poradnictwa","Do przesiewu otępiennego","Do selekcji zawodowej"], c:0, g:"",
+    why:"Przesiew otępienny to MMSE, a selekcja zawodowa — WKP.",
+    hook:"MKS to narzędzie terapii narracyjnej, nie rekrutacji.",
+    ex:"Wsparcie psychoterapii i poradnictwa."},
+   {t:"Kogo bada MKS?", a:["Młodzież i dorosłych","Dzieci poniżej 3 roku życia","Grupy w miejscu pracy"], c:0, g:"w",
+    why:"Dzieci poniżej 3 lat bada DSR, a grupy — socjometria.",
+    hook:"Trzeba umieć opowiedzieć o sobie — stąd dopiero od młodzieży.",
+    ex:"Młodzież i dorośli."}]}
+ ],
+ bossQ:[
+  {t:"„Wymuszony rozkład normalny; fizyczne sortowanie dużej puli kartoników.”", a:["Q-sort","RVS","MKS"], c:0,
+   why:"Wymuszony rozkład normalny to znak Q-sort.", hook:"Dzwon Gaussa równa się Q-sort.", ex:"Technika Q-sort."},
+  {t:"„Badany sam generuje wartościowania, potem ocenia 24 rodzaje emocji.”", a:["MKS","Q-sort","ACL"], c:0,
+   why:"Wartościowania i 24 emocje to Hermans.", hook:"Dwadzieścia cztery emocje — Hermans.", ex:"MKS — Metoda Konfrontacji z Sobą."},
+  {t:"„Nie pozwala uciekać w neutralne, środkowe odpowiedzi.”", a:["Q-sort","MMPI-2","LOT-R"], c:0,
+   why:"To główna zaleta metodologii Q.", hook:"Bez środka — Q-sort.", ex:"Technika Q-sort."},
+  {t:"„Technika macierzowa wspierająca psychoterapię narracyjną.”", a:["MKS","Q-sort","RISB"], c:0,
+   why:"Macierz i narracja to MKS.", hook:"Macierz plus narracja — MKS.", ex:"MKS 2000 — metoda Hermansa."},
+  {t:"„Porządkuje wartości instrumentalne i ostateczne — ale to NIE jest metodologia Q.”", a:["RVS","Q-sort","MKS"], c:0,
+   why:"RVS ranguje, Q-sort wymusza rozkład. Klasyczna pułapka tej pary.", hook:"Wartości w kolejce — Rokeach, nie Gauss.", ex:"RVS — Skala Wartości Rokeacha."}
+ ]
+},
+{
+ id:"cment", emoji:"☠️", name:"Cmentarz Zdyskredytowanych", hue:"var(--c6)", tint:"#1b1d24",
+ intro:"Narzędzia, które w świetle diagnozy opartej na dowodach (EBA) zostały zdyskredytowane w profesjonalnej diagnozie indywidualnej — z powodu braku rzetelności, trafności lub oparcia na błędnych założeniach.",
+ boss:{name:"Zjawa Lüschera", badge:"🏅 Łowca Zdyskredytowanych"},
+ stations:[
+ {code:"Lüscher", full:"Test Kolorów Lüschera",
+  card:{mierzy:"Pretenduje do diagnozy osobowości.",
+        budowa:"Brak danych w źródle. [OGÓLNE] zweryfikuj z wykładem",
+        kto:"—",
+        hak:"Zdyskredytowany w profesjonalnej diagnozie indywidualnej — podstawą jest brak rzetelności, trafności lub błędne założenia (EBA)."},
+  q:[
+   {t:"Jaki jest status Testu Kolorów Lüschera?", a:["Zdyskredytowany w profesjonalnej diagnozie indywidualnej","Rekomendowany w podejściu EBA","Przesiewowe narzędzie otępienne"], c:0, g:"",
+    why:"Przesiew otępienny to MMSE. Lüscher figuruje na liście narzędzi odrzuconych.",
+    hook:"Kolory Lüschera świecą tylko na jarmarku.",
+    ex:"Narzędzie zdyskredytowane w diagnozie indywidualnej."},
+   {t:"Co jest podstawą dyskredytacji narzędzi z tej grupy?", a:["Brak rzetelności, trafności lub oparcie na błędnych założeniach","Zbyt długi czas badania","Brak polskiej adaptacji"], c:0, g:"",
+    why:"To kryterium diagnozy opartej na dowodach empirycznych (EBA), a nie kwestie organizacyjne.",
+    hook:"EBA pyta o trzy rzeczy: rzetelność, trafność, założenia.",
+    ex:"Brak rzetelności, trafności lub błędne założenia."}]},
+
+ {code:"Szondi", full:"Test Szondiego",
+  card:{mierzy:"Pretenduje do diagnozy osobowości.",
+        budowa:"Brak danych w źródle. [OGÓLNE] zweryfikuj z wykładem",
+        kto:"—",
+        hak:"Wymieniony na liście zdyskredytowanych obok testu Lüschera i grafologii."},
+  q:[
+   {t:"Do jakiej grupy narzędzi należy Test Szondiego?", a:["Do narzędzi zdyskredytowanych","Do metod półprojekcyjnych z WOP","Do wywiadów standaryzowanych"], c:0, g:"",
+    why:"WOP to RISB, a wywiady standaryzowane to SCID, CIDI i pokrewne.",
+    hook:"Szondi leży na cmentarzu obok Lüschera.",
+    ex:"Narzędzie zdyskredytowane."}]},
+
+ {code:"Grafologia", tile:"GRAFO", full:"Grafologiczna analiza pisma",
+  card:{mierzy:"Pretenduje do oceny osobowości na podstawie charakteru pisma.",
+        budowa:"Analiza próbki pisma odręcznego.",
+        kto:"—",
+        hak:"Zdyskredytowana WŁAŚNIE jako metoda oceny osobowości."},
+  q:[
+   {t:"W jakim zastosowaniu zdyskredytowano grafologiczną analizę pisma?", a:["Jako metodę oceny osobowości","Jako metodę oceny czytelności pisma","Jako narzędzie diagnozy dysgrafii"], c:0, g:"",
+    why:"Źródło precyzuje zakres: chodzi o ocenę osobowości.",
+    hook:"Charakter pisma nie zdradza charakteru.",
+    ex:"Jako metodę oceny osobowości."}]},
+
+ {code:"Bender", full:"Wzrokowo-Motoryczny Test Gestalt Lauretty Bender",
+  card:{mierzy:"Bywał używany do diagnozy osobowości i uszkodzeń neuropsychologicznych — w obu tych zastosowaniach jest zdyskredytowany.",
+        budowa:"Odwzorowywanie figur. [OGÓLNE] zweryfikuj z wykładem",
+        kto:"—",
+        hak:"DOPUSZCZALNY wyłącznie jako test koordynacji wzrokowo-ruchowej. To jedyne narzędzie z cmentarza z warunkowym ułaskawieniem."},
+  q:[
+   {t:"W jakim zastosowaniu test Bender pozostaje dopuszczalny?", a:["Jako test koordynacji wzrokowo-ruchowej","Jako test osobowości","Jako test uszkodzeń neuropsychologicznych"], c:0, g:"",
+    why:"To jedyny wyjątek na całym cmentarzu: zdyskredytowany jako test osobowości i uszkodzeń, dozwolony jako test koordynacji.",
+    hook:"Bender rysuje rękę, nie duszę.",
+    ex:"Wyłącznie jako test koordynacji wzrokowo-ruchowej."},
+   {t:"Jak brzmi pełna nazwa testu Bender?", a:["Wzrokowo-Motoryczny Test Gestalt Lauretty Bender","Rysunkowy Test Twórczego Myślenia","Test Stosunków Rodzinnych"], c:0, g:"",
+    why:"Odpowiedź b) to TCT-DP, a c) to TSR.",
+    hook:"Wzrokowo-motoryczny — nazwa sama mówi, co jeszcze wolno nim mierzyć.",
+    ex:"Wzrokowo-Motoryczny Test Gestalt Bender."}]},
+
+ {code:"Blacky", full:"Obrazkowy test z psem Blacky",
+  card:{mierzy:"Pretendował do diagnozy psychodynamicznej.",
+        budowa:"Obrazki z psem Blacky. [OGÓLNE] zweryfikuj z wykładem",
+        kto:"—",
+        hak:"Wymieniony razem z Rysunkiem postaci ludzkiej i Domem-Drzewem-Człowiekiem."},
+  q:[
+   {t:"Jaki jest status obrazkowego testu z psem Blacky?", a:["Zdyskredytowany","Rekomendowany dla dzieci","Dopuszczalny jako test koordynacji"], c:0, g:"",
+    why:"Dopuszczalny warunkowo jest wyłącznie test Bender — i to jako test koordynacji.",
+    hook:"Pies Blacky już nie szczeka w gabinecie.",
+    ex:"Narzędzie zdyskredytowane."}]},
+
+ {code:"DDC", full:"Rysunek postaci ludzkiej / Rysunek Dom-Drzewo-Człowiek",
+  card:{mierzy:"Pretendują do wykrywania ukrytych cech psychologicznych na podstawie oznak rysunku.",
+        budowa:"Rysunek postaci ludzkiej lub kompozycji dom–drzewo–człowiek.",
+        kto:"—",
+        hak:"Nie wolno przypisywać ukrytych cech psychologicznych konkretnym oznakom rysunku, o ile nie stosuje się oceny całościowej."},
+  q:[
+   {t:"Dlaczego zdyskredytowano Rysunek postaci ludzkiej i Dom-Drzewo-Człowiek?", a:["Nie wolno przypisywać ukrytych cech pojedynczym oznakom rysunku","Ponieważ dzieci rysują zbyt wolno","Ponieważ nie mają wersji dla dorosłych"], c:0, g:"",
+    why:"To ta sama zasada, którą stosuje się dziś do Testu Rysunku Rodziny: interpretacja tylko całościowa.",
+    hook:"Kreska to kreska. Cechy z niej nie wyskoczą.",
+    ex:"Zakaz interpretacji pojedynczych oznak rysunku."},
+   {t:"Który test rysunkowy NIE znajduje się na liście zdyskredytowanych?", a:["Test Drzewa","Rysunek postaci ludzkiej","Rysunek Dom-Drzewo-Człowiek"], c:0, g:"",
+    why:"Test Drzewa figuruje wśród technik projekcyjnych z zastrzeżeniem, że nie spełnia rygorystycznych wymogów psychometrycznych — ale nie na liście zdyskredytowanych. Za to Dom-Drzewo-Człowiek jest zdyskredytowany. To najpodstępniejsza para w całym materiale.",
+    hook:"Jedno drzewo owocowe żyje. Drzewo w kompozycji z domem — nie.",
+    ex:"Test Drzewa — nie jest zdyskredytowany."}]},
+
+ {code:"Enneagram", tile:"ENNEA", full:"Technika „Enneagram”",
+  card:{mierzy:"Pretenduje do typologii osobowości.",
+        budowa:"Brak danych w źródle. [OGÓLNE] zweryfikuj z wykładem",
+        kto:"—",
+        hak:"Zdyskredytowany konkretnie W DIAGNOSTYCE OSOBOWOŚCI — źródło zawęża zastosowanie."},
+  q:[
+   {t:"W jakim obszarze zdyskredytowano technikę Enneagram?", a:["W diagnostyce osobowości","W socjometrii","W diagnozie neuropsychologicznej"], c:0, g:"",
+    why:"Źródło wprost zawęża: „w diagnostyce osobowości”.",
+    hook:"Enneagram nie wchodzi do gabinetu diagnosty.",
+    ex:"W diagnostyce osobowości."}]}
+ ],
+ bossQ:[
+  {t:"„Zdyskredytowane narzędzie opierające diagnozę osobowości na preferencjach kolorów.”", a:["Test Kolorów Lüschera","Test Szondiego","Test Rorschacha"], c:0,
+   why:"Rorschach nie jest zdyskredytowany — wymaga tylko ogromnego doświadczenia klinicznego.", hook:"Kolory to Lüscher; plamy to wciąż legalny Rorschach.", ex:"Test Kolorów Lüschera."},
+  {t:"„Wolno go stosować wyłącznie jako test koordynacji wzrokowo-ruchowej.”", a:["Test Bender","Test Drzewa","TCT-DP"], c:0,
+   why:"Bender to jedyne warunkowe ułaskawienie na cmentarzu.", hook:"Bender rysuje rękę, nie duszę.", ex:"Wzrokowo-Motoryczny Test Gestalt Bender."},
+  {t:"„Analiza charakteru pisma stosowana do oceny osobowości.”", a:["Grafologia","Test Szondiego","RISB"], c:0,
+   why:"RISB też jest pisemny, ale analizuje treść zdań, nie kształt liter.", hook:"Kształt liter to grafologia; treść zdań to Rotter.", ex:"Grafologiczna analiza pisma."},
+  {t:"„Obrazkowy test z psem.”", a:["Test Blacky","CAT-A","Test Rysunku Rodziny"], c:0,
+   why:"CAT-A używa tablic ze zwierzętami i NIE jest zdyskredytowany.", hook:"Pies Blacky na cmentarzu, zwierzęta CAT-A wciąż w lesie.", ex:"Obrazkowy test z psem Blacky."},
+  {t:"„Zdyskredytowany konkretnie w diagnostyce osobowości; nazwa pochodzi od dziewięcioramiennej figury.”", a:["Enneagram","Test Szondiego","Q-sort"], c:0,
+   why:"Q-sort to pełnoprawna metoda z Laboratorium Niestandardowego.", hook:"Enneagram i Q-sort brzmią egzotycznie, ale tylko jeden jest legalny.", ex:"Technika Enneagram."},
+  {t:"„Metoda rysunkowa opisana jako projekcyjna, o której źródło mówi tylko, że nie spełnia rygorystycznych wymogów psychometrycznych.”", a:["Test Drzewa","Dom-Drzewo-Człowiek","Rysunek postaci ludzkiej"], c:0,
+   why:"Test Drzewa jest słaby psychometrycznie, ale nie znalazł się na liście zdyskredytowanych — w odróżnieniu od dwóch pozostałych.", hook:"Samotne drzewo owocowe przeżyło. Drzewo z domem i człowiekiem — nie.", ex:"Test Drzewa — nie jest zdyskredytowany."},
+  {t:"„Figuruje na liście odrzuconych obok Lüschera i grafologii.”", a:["Test Szondiego","MKS","TSR"], c:0,
+   why:"MKS i TSR to metody pełnoprawne.", hook:"Trójka z cmentarza: Lüscher, Szondi, grafologia.", ex:"Test Szondiego."}
+ ]
+}
+];
+
+/* --- PARY DO POMYLENIA: pytania bonusowe --- */
+const PAIRS = [
+ {t:"NEO-FFI vs NEO-PI-R — co je odróżnia?", a:["NEO-PI-R ma 240 itemów i mierzy cechy oraz ich składniki","NEO-FFI mierzy Gigantyczną Trójkę, NEO-PI-R Wielką Piątkę","NEO-PI-R bada dzieci, NEO-FFI dorosłych"], c:0,
+  why:"Obie wersje mierzą Wielką Piątkę u młodzieży i dorosłych. Różni je głębokość: NEO-PI-R schodzi do składników cech.", hook:"FFI to skrót, PI-R to pełna wersja z podszewką.", ex:"NEO-PI-R dodaje składniki cech."},
+ {t:"WAIS-R vs WISC-V — co je odróżnia?", a:["WAIS-R: 16–79 lat; WISC-V: 6–16 lat","WAIS-R bada płynną, WISC-V skrystalizowaną","WAIS-R różnicuje wszystkie stopnie niepełnosprawności"], c:0,
+  why:"Obie mierzą inteligencję ogólną. Wszystkie stopnie niepełnosprawności różnicuje wyłącznie SB5.", hook:"WAIS Adults, WISC Children. Reszta identyczna.", ex:"WAIS-R 16–79, WISC-V 6–16 lat."},
+ {t:"APIS-Z vs APIS-P — co je odróżnia?", a:["Wyłącznie grupa wiekowa: powyżej 17 lat vs 12–16 lat","APIS-Z ma 8 testów, APIS-P ma 4","APIS-P bada zdolności społeczne, APIS-Z nie"], c:0,
+  why:"Konstrukcja jest ta sama: bateria 8 testów, 4 typy zdolności. Różni je tylko adresat.", hook:"Z jak Zaraz dorosły, P jak Podstawówka na finiszu.", ex:"Różni je wyłącznie grupa wiekowa."},
+ {t:"SES vs MSEI — co je odróżnia?", a:["SES: 10 itemów, jednowymiarowa, globalna; MSEI: 116 pozycji, 11 skal","SES: 116 pozycji; MSEI: 10 itemów","Obie mierzą samoocenę globalną"], c:0,
+  why:"SES daje jeden wskaźnik globalny, MSEI rozbija samoocenę na 11 szczegółowych składowych.", hook:"SES to selfie ogólne, MSEI to mnóstwo składowych.", ex:"SES globalna, MSEI wielowymiarowa."},
+ {t:"TAT vs CAT — co je odróżnia?", a:["TAT dla dorosłych; CAT dla dzieci, tablice ze zwierzętami lub ludźmi","TAT ma 10 tablic, CAT 30","CAT opiera się na teorii Rottera"], c:0,
+  why:"TAT ma 30 tablic (podaje się 10). Obie metody realizują ten sam cel na teorii Murraya.", hook:"TAT dla dorosłych, CAT dla dzieci: A jak Animals, H jak Humans.", ex:"TAT dorośli, CAT dzieci."},
+ {t:"RISB vs Rorschach — co je odróżnia?", a:["RISB: półprojekcyjny, najmocniej ustrukturalizowany, daje WOP; Rorschach: całkowicie nieustrukturyzowany, 10 plansz","RISB: 10 plansz; Rorschach: dokańczanie zdań","Obie dają Wskaźnik Ogólnego Przystosowania"], c:0,
+  why:"To dwa przeciwne bieguny strukturalizacji w tej samej krainie. WOP należy wyłącznie do RISB.", hook:"Rotter daje początek zdania, Rorschach nie daje nic.", ex:"RISB ustrukturalizowany, Rorschach nie."},
+ {t:"TRE vs INTE — co je odróżnia?", a:["TRE: test wykonawczy, 30 zadań; INTE: samoopis, 33 itemy, 3 wskaźniki","TRE: samoopis; INTE: test wykonawczy","TRE opiera się na teorii Bandury"], c:0,
+  why:"Wspólna teoria Saloveya i Mayera, różna metoda pomiaru — i różne liczby: 30 vs 33.", hook:"TRE każe rozwiązać, INTE każe ocenić siebie.", ex:"TRE wykonawczy, INTE samoopisowy."},
+ {t:"STAI: stan czy cecha — jak rozpoznać po instrukcji?", a:["„Jak się czujesz teraz” to stan; „jak się zazwyczaj czujesz” to cecha","„Teraz” to cecha; „zazwyczaj” to stan","Obie części mierzą lęk dyspozycyjny"], c:0,
+  why:"Lęk-cecha jest dyspozycyjny i stały, lęk-stan reaktywny i sytuacyjny.", hook:"„Teraz” równa się stan, „zazwyczaj” równa się cecha.", ex:"Teraz to stan, zazwyczaj to cecha."},
+ {t:"Q-sort vs RVS — co je odróżnia?", a:["Q-sort wymusza rozkład normalny; RVS ranguje wartości instrumentalne i ostateczne","RVS wymusza rozkład normalny; Q-sort ranguje","Obie dają wynik znormalizowany ilościowo"], c:0,
+  why:"Obie polegają na fizycznym porządkowaniu i żadna nie daje klasycznej normalizacji ilościowej — ale tylko Q-sort narzuca przymusową oś.", hook:"Rokeach ustawia w kolejce, Q-sort wciska w dzwon Gaussa.", ex:"Q-sort wymusza rozkład, RVS ranguje."},
+ {t:"SB5 vs Leiter-3 — co je odróżnia?", a:["SB5: płynna i skrystalizowana, część słowna i bezsłowna, 2–69 lat; Leiter-3: całkowicie niewerbalny, płynna, 3–70+ lat","SB5 jest całkowicie niewerbalny, Leiter-3 werbalny","Oba różnicują wszystkie stopnie niepełnosprawności"], c:0,
+  why:"Wszystkie stopnie niepełnosprawności różnicuje wyłącznie SB5. Leiter-3 wyróżnia się brakiem słów i czułością na zmiany otępienne.", hook:"Binet mówi, Leiter milczy. Binet od 2, Leiter od 3.", ex:"SB5 werbalny i niewerbalny, Leiter całkowicie niewerbalny."}
+];
+
+/* --- DYKTANDO: pytania z odpowiedzia wpisywana z klawiatury --- */
+const DYKT = [
+ {typ:"txt", t:"Ile pytań ma MMPI-2?", ok:["567"], podp:"sama liczba", g:"n",
+  why:"MMPI-2: 567 pytań dychotomicznych. 240 to NEO-PI-R, 300 to ACL.",
+  hook:"Pięć-sześć-siedem: schodki w górę do klinicznego piekła.",
+  ex:"Pięćset sześćdziesiąt siedem pytań."},
+ {typ:"txt", t:"W ile skal pogrupowane są pytania MMPI-2?", ok:["121"], podp:"sama liczba", g:"s",
+  why:"121 skal: kontrolne, kliniczne i dodatkowe. 37 to ACL, 11 to MSEI.",
+  hook:"Jedenaście do kwadratu — stąd analiza profilowa.",
+  ex:"Sto dwadzieścia jeden skal."},
+ {typ:"txt", t:"Ile itemów ma NEO-PI-R?", ok:["240"], podp:"sama liczba", g:"n",
+  why:"NEO-PI-R: 240 itemów, bo mierzy cechy i ich składniki.",
+  hook:"Pełna inwentaryzacja Wielkiej Piątki kosztuje 240 pozycji.",
+  ex:"Dwieście czterdzieści itemów."},
+ {typ:"txt", t:"Ile przymiotników zawiera ACL?", ok:["300"], podp:"sama liczba", g:"n",
+  why:"ACL: 300 przymiotników do wyboru, pogrupowanych w 37 skal.",
+  hook:"Trzysta słów o sobie, trzydzieści siedem skal.",
+  ex:"Trzysta przymiotników."},
+ {typ:"txt", t:"Ile skal ma ACL?", ok:["37"], podp:"sama liczba", g:"s",
+  why:"37 skal ACL. 121 to MMPI-2, 11 to MSEI.",
+  hook:"Trzysta słów przemielonych na trzydzieści siedem skal.",
+  ex:"Trzydzieści siedem skal."},
+ {typ:"txt", t:"Ile pozycji ma FCZ-KT(R)?", ok:["100"], podp:"sama liczba", g:"n",
+  why:"FCZ-KT(R): 100 pozycji, skala 4-stopniowa. 116 to MSEI, 90 to PROKOS.",
+  hook:"Okrągła setka na temperament.",
+  ex:"Sto pozycji."},
+ {typ:"txt", t:"Ile skal ma FCZ-KT(R)?", ok:["7","siedem"], podp:"liczba albo słowo", g:"s",
+  why:"Siedem skal Strelaua. 11 skal ma MSEI.",
+  hook:"Siedem skal temperamentu jak siedem dni tygodnia.",
+  ex:"Siedem skal."},
+ {typ:"txt", t:"Ile pozycji testowych ma MSEI?", ok:["116"], podp:"sama liczba", g:"n",
+  why:"MSEI: 116 pozycji. 100 to FCZ-KT(R), 133 to WKP.",
+  hook:"Sto szesnaście — samoocena o szesnaście bogatsza od temperamentu.",
+  ex:"Sto szesnaście pozycji."},
+ {typ:"txt", t:"Ile skal ma MSEI?", ok:["11","jedenascie","jedenaście"], podp:"liczba albo słowo", g:"s",
+  why:"11 skal MSEI plus skale kontrolne. 7 skal ma FCZ-KT(R).",
+  hook:"Jedenaście składowych, bo jedna globalna to za mało.",
+  ex:"Jedenaście skal."},
+ {typ:"txt", t:"Ile stwierdzeń ma CISS?", ok:["48"], podp:"sama liczba", g:"n",
+  why:"CISS: 48 stwierdzeń, skala 5-stopniowa, trzy style.",
+  hook:"Czterdzieści osiem na trzy drogi ucieczki ze stresu.",
+  ex:"Czterdzieści osiem stwierdzeń."},
+ {typ:"txt", t:"Ile stwierdzeń ma WKP?", ok:["133"], podp:"sama liczba", g:"n",
+  why:"WKP: 133 stwierdzenia. 116 to MSEI, 100 to FCZ-KT(R).",
+  hook:"Sto trzydzieści trzy pytania i wychodzi ci zawód.",
+  ex:"Sto trzydzieści trzy stwierdzenia."},
+ {typ:"txt", t:"Ile itemów ma PROKOS?", ok:["90"], podp:"sama liczba", g:"n",
+  why:"90 itemów: 60 diagnostycznych i 30 buforowych.",
+  hook:"Sześćdziesiąt pracuje, trzydzieści buforuje.",
+  ex:"Dziewięćdziesiąt itemów."},
+ {typ:"txt", t:"Ile itemów PROKOS to pozycje buforowe?", ok:["30"], podp:"sama liczba", g:"n",
+  why:"30 buforowych z 90. Bufory to znak rozpoznawczy PROKOS.",
+  hook:"Co trzeci item PROKOS niczego nie mierzy.",
+  ex:"Trzydzieści pozycji buforowych."},
+ {typ:"txt", t:"Ile itemów ma INTE?", ok:["33"], podp:"sama liczba", g:"n",
+  why:"INTE: 33 itemy i 3 wskaźniki. TRE ma 30 zadań.",
+  hook:"Same trójki: trzydzieści trzy itemy, trzy wskaźniki.",
+  ex:"Trzydzieści trzy itemy."},
+ {typ:"txt", t:"Ile zadań obejmuje MMSE?", ok:["30"], podp:"sama liczba", g:"n",
+  why:"MMSE: 30 zadań. 33 itemy ma INTE.",
+  hook:"Trzydzieści zadań na przesiew.",
+  ex:"Trzydzieści zadań."},
+ {typ:"txt", t:"Ile tablic ma komplet TAT?", ok:["30"], podp:"sama liczba", g:"n",
+  why:"TAT ma 30 tablic, choć w badaniu podaje się zwykle 10. Rorschach ma 10 plansz.",
+  hook:"Trzydzieści w pudełku, dziesięć na stole.",
+  ex:"Trzydzieści tablic."},
+ {typ:"txt", t:"Ile plansz ma Test Rorschacha?", ok:["10"], podp:"sama liczba", g:"n",
+  why:"Rorschach: dokładnie 10 plansz. 30 tablic to TAT.",
+  hook:"Dziesięć plam i ani jednej więcej.",
+  ex:"Dziesięć plansz."},
+ {typ:"txt", t:"Ile kart liczy jedna talia WCST?", ok:["64"], podp:"sama liczba", g:"n",
+  why:"WCST: dwie talie po 64 karty.",
+  hook:"Dwie talie po 64 — jak dwie szachownice pełne kart.",
+  ex:"Sześćdziesiąt cztery karty."},
+ {typ:"txt", t:"Według ilu kryteriów ocenia się TCT-DP?", ok:["14"], podp:"sama liczba", g:"n",
+  why:"14 kryteriów TCT-DP. 11 skal ma MSEI, 37 skal ACL.",
+  hook:"Czternaście kryteriów na jeden dokończony kwadrat.",
+  ex:"Czternaście kryteriów."},
+ {typ:"txt", t:"Ile rodzajów emocji ocenia się w MKS Hermansa?", ok:["24"], podp:"sama liczba", g:"n",
+  why:"24 rodzaje emocji krzyżowane z wartościowaniami. To nie liczba skal ani pozycji.",
+  hook:"Dwadzieścia cztery emocje na każde wspomnienie.",
+  ex:"Dwadzieścia cztery rodzaje emocji."},
+ {typ:"txt", t:"Ile itemów ma SWLS?", ok:["5","piec","pięć"], podp:"liczba albo słowo", g:"n",
+  why:"SWLS: 5 itemów, najkrótsza skala w materiale. SES, LOT-R i GSES mają po 10.",
+  hook:"Pięć zdań na całe życie.",
+  ex:"Pięć itemów."},
+ {typ:"txt", t:"Dla ilu grup klinicznych GSES ma normy?", ok:["7","siedem"], podp:"liczba albo słowo", g:"n",
+  why:"Siedem grup klinicznych, np. po zawale, SM, diabetycy. To nie liczba skal.",
+  hook:"Siódemka przy GSES dotyczy pacjentów, nie skal.",
+  ex:"Siedem grup klinicznych."},
+ {typ:"txt", t:"Z ilu testów składa się bateria APIS?", ok:["8","osiem"], podp:"liczba albo słowo", g:"n",
+  why:"APIS: 8 testów mierzących 4 typy zdolności.",
+  hook:"Cztery zdolności razy dwa podejścia to osiem testów.",
+  ex:"Osiem testów."},
+ {typ:"txt", t:"Ile skal ma SB5?", ok:["5","piec","pięć"], podp:"liczba albo słowo", g:"s",
+  why:"SB5: 5 skal, każda w części słownej i bezsłownej.",
+  hook:"Piątka w nazwie, piątka skal.",
+  ex:"Pięć skal."},
+ {typ:"txt", t:"W jakim wieku bada WAIS-R? Wpisz przedział, np. 6-16", ok:["16-79","16 79"], podp:"np. 16-79", g:"w",
+  why:"WAIS-R: 16–79 lat. 6–16 to WISC, 12–16 to APIS-P.",
+  hook:"WAIS Adults, WISC Children.",
+  ex:"Szesnaście do siedemdziesięciu dziewięciu lat."},
+ {typ:"txt", t:"W jakim wieku bada SB5? Wpisz przedział", ok:["2-69","2 69"], podp:"np. 16-79", g:"w",
+  why:"SB5: 2–69 lat. Leiter-3 to 3–70+.",
+  hook:"Binet bierze dwulatka i odprowadza go na emeryturę.",
+  ex:"Od drugiego do sześćdziesiątego dziewiątego roku życia."},
+ {typ:"txt", t:"W jakim wieku bada Leiter-3? Wpisz przedział", ok:["3-70","3 70","3-70+"], podp:"np. 16-79", g:"w",
+  why:"Leiter-3: 3–70+ lat, z otwartą górną granicą. SB5 to 2–69.",
+  hook:"Leiter startuje rok po Binecie i kończy plusem.",
+  ex:"Od trzeciego do siedemdziesiątego roku życia i dalej."},
+ {typ:"txt", t:"W jakim wieku bada APIS-P? Wpisz przedział", ok:["12-16","12 16"], podp:"np. 16-79", g:"w",
+  why:"APIS-P: 12–16 lat. WISC to 6–16 — bardzo blisko.",
+  hook:"APIS-P zaczyna od dwunastki, WISC już od szóstki.",
+  ex:"Od dwunastego do szesnastego roku życia."},
+ {typ:"txt", t:"W jakim wieku bada KRR? Wpisz przedział", ok:["15-20","15 20"], podp:"np. 16-79", g:"w",
+  why:"KRR: młodzież 15–20 lat. FCZ-KT(R) zaczyna się od 15, ale nie ma górnej granicy.",
+  hook:"Piętnaście–dwadzieścia: nastolatek opowiada o swoim domu.",
+  ex:"Młodzież w wieku piętnastu do dwudziestu lat."},
+ {typ:"txt", t:"Dokończ skale FCZ-KT(R): żwawość, perseweratywność, wrażliwość sensoryczna, wytrzymałość, reaktywność emocjonalna, aktywność i...", ok:["rytmiczność","rytmicznosc"], podp:"jedno słowo", g:"s",
+  why:"Siódma skala to rytmiczność.",
+  hook:"Regularność też jest cechą temperamentu.",
+  ex:"Rytmiczność."},
+ {typ:"txt", t:"Która skala MSEI bywa podstępnie wrzucana do skal FCZ-KT?", ok:["witalność","witalnosc"], podp:"jedno słowo", g:"s",
+  why:"Witalność to skala MSEI, nie Strelaua. Podobnie atrakcyjność fizyczna.",
+  hook:"Witalność mieszka w MSEI, nie u Strelaua.",
+  ex:"Witalność."},
+ {typ:"txt", t:"Jak nazywa się wskaźnik obliczany w RISB? Wpisz skrót lub pełną nazwę", ok:["WOP","wskaźnik ogólnego przystosowania","wskaznik ogolnego przystosowania"], podp:"skrót albo pełna nazwa", g:"s",
+  why:"WOP — Wskaźnik Ogólnego Przystosowania. Występuje wyłącznie w RISB.",
+  hook:"WOP zdradza Rottera.",
+  ex:"Wskaźnik Ogólnego Przystosowania."},
+ {typ:"txt", t:"Która cecha modelu Eysencka nie należy do Wielkiej Piątki?", ok:["psychotyzm"], podp:"jedno słowo", g:"s",
+  why:"Psychotyzm należy do Gigantycznej Trójki, nie do NEO.",
+  hook:"Psychotyzm wynajmuje pokój u Eysencka.",
+  ex:"Psychotyzm."},
+ {typ:"txt", t:"Jak nazywa się dodatkowe pudełko w TSR, do którego trafiają emocje niepasujące do nikogo?", ok:["nikt","pudełko nikt","pudelko nikt"], podp:"jedno słowo", g:"s",
+  why:"Pudełko „nikt” jest samo w sobie diagnostyczne.",
+  hook:"Jak emocja do nikogo nie pasuje, leci do pudełka nikt.",
+  ex:"Pudełko „nikt”."},
+ {typ:"txt", t:"Który znany test wchodzi w skład baterii uwagi i pamięci Leiter-3?", ok:["stroop","test stroopa","stroopa"], podp:"nazwisko", g:"s",
+  why:"Test Stroopa siedzi w baterii uwagi i pamięci, nie w poznawczej.",
+  hook:"Stroop testuje hamowanie, więc mieszka przy uwadze.",
+  ex:"Test Stroopa."},
+ {typ:"txt", t:"Na czyjej teorii temperamentu opiera się FCZ-KT(R)?", ok:["strelau","strelaua","jan strelau"], podp:"nazwisko", g:"",
+  why:"Regulacyjna teoria temperamentu Strelaua. Eysenck stoi za EPQ-R.",
+  hook:"Strelau pyta JAK się zachowujesz, nie CO robisz.",
+  ex:"Teoria Strelaua."},
+ {typ:"txt", t:"Na czyjej teorii opiera się GSES?", ok:["bandura","bandury","albert bandura"], podp:"nazwisko", g:"",
+  why:"Teoria własnej skuteczności Bandury. Strelau stoi za FCZ-KT(R).",
+  hook:"Bandura i self-efficacy — GSES to jego skala.",
+  ex:"Teoria Bandury."},
+ {typ:"txt", t:"Czyja teoria potrzeb stoi za TAT?", ok:["murray","murraya","henry murray"], podp:"nazwisko", g:"",
+  why:"Teoria potrzeb Murraya. Rotter stworzył RISB.",
+  hook:"Murray dał potrzeby, TAT każe je opowiedzieć.",
+  ex:"Teoria potrzeb Murraya."},
+ {typ:"txt", t:"Kto jest autorem skali samooceny SES?", ok:["rosenberg","rosenberga"], podp:"nazwisko", g:"",
+  why:"Rosenberg — stąd nazwa. Gough stworzył ACL, Rokeach RVS.",
+  hook:"Rosenberg mierzy wartość siebie, Rokeach wartości w ogóle.",
+  ex:"Rosenberg."},
+ {typ:"txt", t:"Kto jest autorem Listy Przymiotników (ACL)?", ok:["gough","gougha"], podp:"nazwisko", g:"",
+  why:"Gough. Rosenberg stoi za SES, Rokeach za RVS.",
+  hook:"Przymiotniki zawsze prowadzą do Gougha.",
+  ex:"Gough."},
+ {typ:"txt", t:"Czyja jest Skala Wartości oznaczana skrótem RVS?", ok:["rokeach","rokeacha"], podp:"nazwisko", g:"",
+  why:"Rokeach — wartości instrumentalne i ostateczne.",
+  hook:"Rokeach ustawia wartości w kolejce.",
+  ex:"Rokeach."},
+ {typ:"txt", t:"Wpisz narzędzie: dwie talie po 64 karty, regułę sortowania musisz odkryć sama.", ok:["WCST","wisconsin","test sortowania kart z wisconsin"], podp:"skrót albo nazwa", g:"",
+  why:"To WCST — test funkcji wykonawczych.",
+  hook:"Karty bez instrukcji — Wisconsin.",
+  ex:"WCST."},
+ {typ:"txt", t:"Wpisz narzędzie: 10 plansz z plamami atramentowymi, pytanie „co by to mogło być?”", ok:["rorschach","test rorschacha"], podp:"nazwa", g:"",
+  why:"Materiał całkowicie nieustrukturyzowany — Rorschach.",
+  hook:"Dziesięć plam to Rorschach.",
+  ex:"Test Rorschacha."},
+ {typ:"txt", t:"Wpisz narzędzie: walizeczka z rzeczami, badanie przez zabawę, dziecko poniżej 3 lat.", ok:["DSR","dziecięca skala rozwojowa","dziecieca skala rozwojowa"], podp:"skrót albo nazwa", g:"",
+  why:"Walizeczka i wiek poniżej 3 lat to DSR.",
+  hook:"Walizeczka zdradza DSR natychmiast.",
+  ex:"DSR."},
+ {typ:"txt", t:"Wpisz narzędzie: wywiad standaryzowany nastawiony na diagnozę autyzmu.", ok:["DISCO"], podp:"skrót", g:"",
+  why:"DISCO. Symulowanie zaburzeń wykrywa SIRS.",
+  hook:"DISCO tańczy w spektrum.",
+  ex:"DISCO."},
+ {typ:"txt", t:"Wpisz narzędzie: wywiad standaryzowany wykrywający symulowanie zaburzeń.", ok:["SIRS"], podp:"skrót", g:"",
+  why:"SIRS. Autyzm to DISCO.",
+  hook:"SIRS pyta, czy aby nie udajesz.",
+  ex:"SIRS."},
+ {typ:"txt", t:"Wpisz metodę: wymusza rozkład normalny przy fizycznym sortowaniu kartoników.", ok:["q-sort","q sort","qsort","metodologia q"], podp:"nazwa", g:"",
+  why:"Q-sort. RVS też porządkuje, ale bez wymuszonego rozkładu.",
+  hook:"Dzwon Gaussa równa się Q-sort.",
+  ex:"Technika Q-sort."},
+ {typ:"txt", t:"Wpisz narzędzie: 30 zamkniętych zadań o emocjach, 5 części o rosnącej trudności.", ok:["TRE","wykonawczy test rozumienia emocji"], podp:"skrót albo nazwa", g:"",
+  why:"TRE — test wykonawczy. INTE to samoopis na tej samej teorii.",
+  hook:"Zadania o emocjach zawsze TRE.",
+  ex:"TRE."},
+ {typ:"txt", t:"Wpisz jedyne narzędzie z cmentarza dopuszczalne jako test koordynacji wzrokowo-ruchowej.", ok:["bender","test bendera","test bender","wzrokowo-motoryczny test gestalt"], podp:"nazwisko albo nazwa", g:"",
+  why:"Test Bender — jedyne warunkowe ułaskawienie na cmentarzu.",
+  hook:"Bender rysuje rękę, nie duszę.",
+  ex:"Test Bender."}
+];
+
+/* =========================================================
+   SILNIK
+   ========================================================= */
+const COLS = 9;
+let VIEWROWS = 10;              // 9 na duzym ekranie - ustawiane w layout()
+const LEVELS = [
+  {xp:0, n:"Praktykant"}, {xp:400, n:"Asystent"}, {xp:1000, n:"Diagnosta"},
+  {xp:1800, n:"Superwizor"}, {xp:2600, n:"Ekspert PTP"}
+];
+const BADGES = [
+  {id:"wiek",  t:"🏅 Wiek Bez Błędu",        d:"8 trafnych pytań „kogo bada” bez ani jednej pomyłki w tej kategorii"},
+  {id:"licz",  t:"🏅 Liczbowy Snajper",      d:"12 trafnych pytań o liczby itemów, skal i tablic"},
+  {id:"skale", t:"🏅 Pogromca Skal",         d:"8 trafnych pytań o skale i budowę narzędzi"},
+  {id:"cment", t:"🏅 Łowca Zdyskredytowanych", d:"pokonaj bossa Cmentarza Zdyskredytowanych"},
+  {id:"last",  t:"🏅 Ostatni Boss",           d:"pokonaj wszystkich sześciu bossów"},
+  {id:"pary",  t:"🏅 Rozjemca Par",           d:"komplet 10 par do pomylenia bez błędu"},
+  {id:"dykt",  t:"🏅 Bezbłędne Dyktando",     d:"runda 10 wpisywanych odpowiedzi bez błędu i bez literówki"}
+];
+
+const S = {
+  xp:0, streak:0, correct:0, total:0,
+  px:4, py:0, busy:false,
+  done:{}, qdone:{}, boss:{}, cardSeen:{},
+  repeat:[], badges:{},
+  tally:{wOK:0,wERR:0,nOK:0,sOK:0}, pairsPerfect:0
+};
+
+/* ---------- budowa mapy ---------- */
+const MAP = []; // MAP[row][col] = cell
+const REGROW = [];
+(function buildMap(){
+  REGIONS.forEach((reg, ri) => {
+    const n = reg.stations.length;
+    const blocks = Math.ceil(n / 4);
+    const start = MAP.length;
+    let si = 0;
+    MAP.push(row(ri, "floor"));                       // korytarz wejściowy
+    for (let b = 0; b < blocks; b++){
+      const r = row(ri, "floor");
+      [1,3,5,7].forEach(c => {
+        if (si < n){ r[c] = {t:"st", reg:ri, idx:si, key:ri+"."+si}; si++; }
+      });
+      MAP.push(r);
+      MAP.push(row(ri, "floor"));                     // korytarz między rzędami
+    }
+    const br = row(ri, "floor");
+    br[4] = {t:"boss", reg:ri};
+    MAP.push(br);
+    const gr = row(ri, "wall");
+    gr[4] = (ri === REGIONS.length - 1) ? {t:"trophy", reg:ri} : {t:"gate", reg:ri};
+    MAP.push(gr);
+    REGROW.push([start, MAP.length - 1]);
+  });
+  function row(ri, t){ return Array.from({length:COLS}, () => ({t, reg:ri})); }
+})();
+
+const TOTAL_ST = REGIONS.reduce((a,r) => a + r.stations.length, 0);
+
+/* ---------- render mapy ---------- */
+const vp = document.getElementById("viewport");
+const world = document.getElementById("world");
+const hero = document.getElementById("hero");
+const sprite = document.getElementById("sprite");
+let TS = 40;
+
+function layout(){
+  // telefon: kafelek z szerokosci, 10 rzedow (bez zmian).
+  // komputer: mapa ma wlasna kolumne, wiec nad nia nie ma HUD - zostaje na nia
+  // prawie cala wysokosc okna. Kafelek z szerokosci kolumny, rzedy z tego, co zostanie.
+  const wide = window.innerWidth >= 900;
+  const app = document.getElementById("app");
+  if (wide){
+    app.style.maxWidth = "";
+    const szerKol = document.getElementById("mapa").clientWidth || (window.innerWidth - 460);
+    const chrome = document.getElementById("pad").offsetHeight +
+                   document.getElementById("legend").offsetHeight + 60;
+    const availH = Math.max(240, window.innerHeight - chrome);
+    let ts = Math.min(Math.floor(szerKol / COLS), 120);
+    VIEWROWS = Math.max(6, Math.min(11, Math.floor(availH / ts)));
+    if (availH / ts < 6){ ts = Math.floor(availH / 6); VIEWROWS = 6; }  // niskie okno: zejdz z kafelkiem
+    TS = Math.max(30, ts);
+  } else {
+    VIEWROWS = 10;
+    TS = Math.max(30, Math.floor(Math.min(vp.parentElement.clientWidth, 414) / COLS));
+    app.style.maxWidth = "";
+  }
+  dopasujPanel();
+  document.documentElement.style.setProperty("--ts", TS + "px");
+  vp.style.width  = (TS * COLS) + "px";
+  vp.style.height = (TS * VIEWROWS) + "px";
+  world.style.width  = (TS * COLS) + "px";
+  world.style.height = (TS * MAP.length) + "px";
+  document.querySelectorAll(".tile").forEach(el => {
+    el.style.left = (el.dataset.c * TS) + "px";
+    el.style.top  = (el.dataset.r * TS) + "px";
+  });
+  placeHero(); camera();
+}
+
+function drawMap(){
+  const frag = document.createDocumentFragment();
+  MAP.forEach((row, r) => row.forEach((cell, c) => {
+    const reg = REGIONS[cell.reg];
+    const el = document.createElement("div");
+    el.className = "tile " + (cell.t === "st" ? "st" : cell.t);
+    el.dataset.r = r; el.dataset.c = c;
+    el.style.setProperty("--tint", reg.tint);
+    el.style.setProperty("--hue", reg.hue);
+    if (cell.t === "st"){
+      el.classList.add("floor");
+      el.innerHTML = '<span class="plate"></span><span class="code">' +
+                     (reg.stations[cell.idx].tile || reg.stations[cell.idx].code) + '</span>';
+      el.id = "t" + cell.key;
+    } else if (cell.t === "boss"){
+      el.classList.add("floor"); el.id = "b" + cell.reg;
+      el.innerHTML = '<span class="plate"></span>';
+    } else if (cell.t === "gate" || cell.t === "trophy"){
+      el.classList.add(cell.t === "gate" ? "gate" : "trophy");
+      el.style.background = reg.tint;
+      el.id = cell.t + cell.reg;
+    }
+    cell.el = el;
+    frag.appendChild(el);
+  }));
+  world.appendChild(frag);
+}
+
+let camY = 0;
+function placeHero(){ hero.style.transform = `translate(${S.px*TS}px,${S.py*TS - camY}px)`; }
+function camera(){
+  camY = S.py * TS - (VIEWROWS * TS) / 2 + TS / 2;
+  camY = Math.max(0, Math.min(camY, Math.max(0, MAP.length * TS - VIEWROWS * TS)));
+  world.style.transform = `translateY(${-camY}px)`;
+  placeHero();
+}
+
+/* ---------- ruch ---------- */
+function passable(r, c){
+  if (r < 0 || c < 0 || r >= MAP.length || c >= COLS) return false;
+  const cell = MAP[r][c];
+  if (cell.t === "wall") return false;
+  if (cell.t === "gate") return !!S.boss[cell.reg];
+  return true;
+}
+function move(d){
+  // panel otwarty blokuje ruch - upewnij sie, ze gracz go widzi, zamiast stac w miejscu
+  if (S.busy){ veil.scrollIntoView({block:"nearest"}); return; }
+  const dr = d === "u" ? -1 : d === "d" ? 1 : 0;
+  const dc = d === "l" ? -1 : d === "r" ? 1 : 0;
+  const nr = S.py + dr, nc = S.px + dc;
+  if (!passable(nr, nc)){
+    if (nr >= 0 && nr < MAP.length && MAP[nr][nc] && MAP[nr][nc].t === "gate")
+      toast("Brama zamknięta. Pokonaj bossa tej krainy.");
+    return;
+  }
+  S.py = nr; S.px = nc;
+  sprite.classList.remove("step"); void sprite.offsetWidth; sprite.classList.add("step");
+  placeHero(); camera();
+  const cell = MAP[nr][nc];
+  if (cell.reg !== undefined) setRegionHud(cell.reg);
+  if (cell.t === "st")      enterStation(cell);
+  else if (cell.t === "boss")   enterBoss(cell.reg);
+  else if (cell.t === "trophy") enterTrophy();
+}
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape"){ e.preventDefault(); dismiss(); return; }
+  if (e.target && e.target.tagName === "INPUT") return;   // w polu wpisu strzalki przesuwaja kursor, nie postac
+  if (veil.classList.contains("on")){ klawiszePanelu(e); return; }   // panel otwarty przejmuje klawiature
+  const m = {ArrowUp:"u", ArrowDown:"d", ArrowLeft:"l", ArrowRight:"r"}[e.key];
+  if (m){ e.preventDefault(); move(m); }
+});
+
+/* Klawiatura w panelu: strzalki podswietlaja odpowiedz, Enter zatwierdza,
+   a/b/c i 1/2/3 wybieraja wprost. Nic nie jest podswietlone na starcie -
+   inaczej przytrzymany Enter przeklikalby pytanie bez czytania. */
+function klawiszePanelu(e){
+  const opcje = [...modal.querySelectorAll(".opt:not([disabled])")];
+
+  if (opcje.length && (e.key === "ArrowDown" || e.key === "ArrowUp")){
+    e.preventDefault();
+    const teraz = opcje.findIndex(o => o.classList.contains("sel"));
+    const nast = e.key === "ArrowDown"
+      ? (teraz < 0 ? 0 : (teraz + 1) % opcje.length)
+      : (teraz < 0 ? opcje.length - 1 : (teraz - 1 + opcje.length) % opcje.length);
+    opcje.forEach(o => o.classList.remove("sel"));
+    opcje[nast].classList.add("sel");
+    opcje[nast].scrollIntoView({block:"nearest"});
+    return;
+  }
+
+  if (opcje.length){
+    const skrot = "123".indexOf(e.key) >= 0 ? "123".indexOf(e.key) : "abc".indexOf(String(e.key).toLowerCase());
+    if (skrot >= 0 && skrot < opcje.length){ e.preventDefault(); opcje[skrot].click(); return; }
+  }
+
+  if (e.key === "Enter"){
+    const wybrana = modal.querySelector(".opt.sel:not([disabled])");
+    const dalej = modal.querySelector("#nx") || modal.querySelector(".next");
+    if (wybrana){ e.preventDefault(); wybrana.click(); return; }
+    if (dalej){ e.preventDefault(); dalej.click(); return; }
+  }
+}
+document.querySelectorAll(".dp").forEach(b => {
+  const go = e => { e.preventDefault(); move(b.dataset.d); };
+  b.addEventListener("touchstart", go, {passive:false});
+  b.addEventListener("mousedown", go);
+});
+
+/* ---------- HUD ---------- */
+function setRegionHud(ri){
+  const reg = REGIONS[ri];
+  const tag = document.getElementById("regionTag");
+  tag.textContent = reg.emoji + " " + reg.name.replace(/^(Kraina |Dolina |Las |Twierdza |Laboratorium |Cmentarz )/, m => m);
+  tag.style.color = reg.hue;
+  const d = reg.stations.filter((_, i) => S.done[ri + "." + i]).length;
+  document.getElementById("progTxt").textContent = d + "/" + reg.stations.length + " stacji";
+}
+function lvl(){ let i = 0; LEVELS.forEach((l, k) => { if (S.xp >= l.xp) i = k; }); return i; }
+function hud(){
+  document.getElementById("xp").textContent = "⭐" + S.xp;
+  document.getElementById("streak").textContent = "🔥" + S.streak + (S.streak >= 3 ? "×2" : "");
+  document.getElementById("acc").textContent = "🎯" + (S.total ? Math.round(100*S.correct/S.total) + "%" : "—");
+  const i = lvl();
+  document.getElementById("rank").textContent = LEVELS[i].n;
+  const nx = LEVELS[i+1];
+  document.getElementById("rankNext").textContent = nx
+    ? "do " + nx.n + ": " + (nx.xp - S.xp) + " XP"
+    : Object.keys(S.done).length + "/" + TOTAL_ST + " stacji zaliczonych";
+  const lo = LEVELS[i].xp, hi = nx ? nx.xp : LEVELS[i].xp + 1;
+  document.getElementById("barI").style.width =
+    (nx ? Math.min(100, 100*(S.xp-lo)/(hi-lo)) : 100) + "%";
+  document.getElementById("repN").textContent = S.repeat.length;
+  document.getElementById("btnRep").disabled = S.repeat.length === 0;
+}
+
+/* ---------- punktacja ---------- */
+/* zwraca faktycznie przyznane XP, zeby etykieta nie obiecywala 5, gdy seria daje 10 */
+function score(ok, tag, partial){
+  S.total++;
+  let zdobyte = 0;
+  if (ok){
+    S.correct++; S.streak++;
+    const base = partial ? 5 : 10;
+    zdobyte = S.streak >= 3 ? base * 2 : base;
+    S.xp += zdobyte;
+    if (tag === "w") S.tally.wOK++;
+    if (tag === "n") S.tally.nOK++;
+    if (tag === "s") S.tally.sOK++;
+  } else {
+    S.streak = 0;
+    if (tag === "w") S.tally.wERR++;
+  }
+  checkBadges(); hud();
+  return zdobyte;
+}
+function grant(id){
+  if (S.badges[id]) return;
+  S.badges[id] = true;
+  const b = BADGES.find(x => x.id === id);
+  toast("Odznaka: " + (b ? b.t : id));
+}
+function checkBadges(){
+  if (S.tally.wOK >= 8 && S.tally.wERR === 0) grant("wiek");
+  if (S.tally.nOK >= 12) grant("licz");
+  if (S.tally.sOK >= 8)  grant("skale");
+  if (S.boss[5]) grant("cment");
+  if (REGIONS.every((_, i) => S.boss[i])) grant("last");
+}
+
+/* ---------- pomocnicze ---------- */
+function words(s){
+  return s.trim().split(/\s+/).filter(w => /[\p{L}\p{N}]/u.test(w)).length;
+}
+function slowa(n){
+  if (n === 1) return "słowo";
+  const t = n % 10, h = n % 100;
+  return (t >= 2 && t <= 4 && !(h >= 12 && h <= 14)) ? "słowa" : "słów";
+}
+function esc(s){ return String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function shuffle(a){ a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [a[i],a[j]]=[a[j],a[i]]; } return a; }
+let toastT;
+function toast(msg){
+  let el = document.getElementById("toast");
+  if (!el){
+    el = document.createElement("div"); el.id = "toast";
+    el.style.cssText = "position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;"+
+      "background:#101322;border:1px solid var(--gold);color:var(--gold);font-family:var(--mono);"+
+      "font-size:12px;padding:9px 13px;border-radius:9px;max-width:92vw;text-align:center";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg; el.style.display = "block";
+  clearTimeout(toastT); toastT = setTimeout(() => el.style.display = "none", 2600);
+}
+
+/* ---------- modal ---------- */
+const veil = document.getElementById("veil"), modal = document.getElementById("modal");
+/* onDismiss: wyjscie awaryjne biezacego ekranu (tlo, Esc, przycisk).
+   Kazde openModal je zeruje, zeby nastepny ekran nie odziedziczyl cudzego. */
+let onDismiss = null;
+/* Limit wysokosci panelu liczony z jego wlasnej pozycji - HUD potrafi zmienic
+   wysokosc przy innej typografii, wiec staly odstep by sie rozjechal. */
+function dopasujPanel(){
+  const root = document.documentElement;
+  if (window.innerWidth < 900){ root.style.removeProperty("--modalMax"); return; }
+  const gora = veil.getBoundingClientRect().top;
+  if (gora > 0) root.style.setProperty("--modalMax", Math.max(240, window.innerHeight - gora - 14) + "px");
+}
+function openModal(hue){
+  modal.style.setProperty("--hue", hue || "var(--c1)"); veil.classList.add("on");
+  document.getElementById("app").classList.add("panel");   // chowa podpowiedz w kolumnie bocznej
+  dopasujPanel();
+  S.busy = true; modal.scrollTop = 0; onDismiss = null;
+}
+function closeModal(){
+  veil.classList.remove("on");
+  document.getElementById("app").classList.remove("panel");
+  S.busy = false; modal.innerHTML = ""; onDismiss = null;
+}
+function dismiss(){ if (modal.dataset.dismissible !== "1") return; (onDismiss || closeModal)(); }
+veil.addEventListener("click", e => { if (e.target === veil) dismiss(); });
+
+/* Uniwersalny ekran pytania.
+   cfg: {q, eyebrow, title, sub, hue, partial, tag, onNext(ok), nextLabel, extra,
+         exit:{label, tapOut, run(odpowiedziano, ok)}} */
+function askQuestion(cfg){
+  const q = cfg.q;
+  const ex = cfg.exit;
+  let answered = false, lastOk = false;
+  openModal(cfg.hue);
+  modal.dataset.dismissible = (ex && ex.tapOut) ? "1" : "0";
+  modal.innerHTML =
+    '<div class="eyebrow">' + esc(cfg.eyebrow) + '</div>' +
+    '<h2>' + esc(cfg.title) + '</h2>' +
+    (cfg.sub ? '<p class="sub">' + cfg.sub + '</p>' : '') +
+    '<p class="qtext">' + esc(q.t) + '</p>' +
+    '<div class="opts" id="opts"></div>' +
+    '<div class="klaw">' + (q.typ === "txt"
+        ? "Enter zatwierdza wpis"
+        : "↑ ↓ wybór · Enter zatwierdza · albo klawisz a / b / c") + '</div>' +
+    '<div id="fb"></div>' +
+    (ex ? '<button class="ghost" id="ex">' + esc(ex.label || "Wyjdź na mapę") + '</button>' : "");
+  if (ex){
+    onDismiss = () => ex.run(answered, lastOk);
+    modal.querySelector("#ex").addEventListener("click", () => ex.run(answered, lastOk));
+  }
+  const box = modal.querySelector("#opts");
+  let order = null;
+
+  if (q.typ === "txt"){                       // odpowiedz wpisywana z klawiatury
+    box.innerHTML =
+      '<input class="wpis" id="odp" type="text" autocomplete="off" autocorrect="off" ' +
+      'autocapitalize="off" spellcheck="false" placeholder="' + esc(q.podp || "wpisz odpowiedź") + '">' +
+      '<button class="next" id="spr">Sprawdź</button>';
+    const inp = box.querySelector("#odp");
+    inp.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); sprawdz(); } });
+    box.querySelector("#spr").addEventListener("click", sprawdz);
+    setTimeout(() => { try { inp.focus(); } catch(e){} }, 40);
+  } else {
+    order = shuffle([0,1,2]);
+    order.forEach((oi, pos) => {
+      const b = document.createElement("button");
+      b.className = "opt"; b.type = "button";
+      b.innerHTML = '<span class="k">' + "abc"[pos] + ')</span><span>' + esc(q.a[oi]) + '</span>';
+      b.addEventListener("click", () => answer(oi, b));
+      box.appendChild(b);
+    });
+  }
+
+  function sprawdz(){
+    const inp = box.querySelector("#odp");
+    if (!inp || inp.disabled) return;
+    const wpis = inp.value;
+    const wynik = ocenWpis(wpis, q.ok);
+    if (wynik === "pusto"){ inp.focus(); return; }
+    inp.disabled = true;
+    box.querySelector("#spr").disabled = true;
+    inp.classList.add(wynik === "blad" ? "zle" : "dobrze");
+    feedback(wynik !== "blad", wynik === "prawie",
+      wynik === "prawie" ? "Prawie: <b>" + esc(wpis.trim()) + "</b> — poprawny zapis to <b>" + esc(q.ok[0]) + "</b>."
+                         : (wynik === "blad" ? "Twoja odpowiedź: <b>" + esc(wpis.trim()) + "</b>." : ""));
+  }
+
+  function answer(oi, btn){
+    const ok = oi === q.c;
+    [...box.children].forEach(x => x.disabled = true);
+    btn.classList.add(ok ? "right" : "wrong");
+    if (!ok){
+      const ci = order.indexOf(q.c);
+      box.children[ci].classList.add("right");
+    }
+    feedback(ok, false, "");
+  }
+
+  /* wspolny ekran zwrotny. polowa = zaliczone na +5 zamiast +10 */
+  function feedback(ok, polowa, uwaga){
+    answered = true; lastOk = ok;
+    const naPol = polowa || !!cfg.partial;
+    const zdobyte = score(ok, cfg.tag || q.g || "", ok && naPol);
+    const xpTxt = " (+" + zdobyte + " XP" + (S.streak >= 3 ? ", seria ×2" : "") + ")";
+    const n = words(q.ex);
+    const fb = modal.querySelector("#fb");
+    fb.className = "on";
+    fb.innerHTML =
+      '<div class="verdict ' + (ok ? "g" : "b") + '">' +
+        (!ok ? "❌ Błąd"
+             : (polowa ? "✅ Prawie — zaliczam połowę"
+                : cfg.partial ? "✅ Trafnie — powtórka zaliczona" : "✅ Trafnie") + xpTxt) +
+      '</div>' +
+      (uwaga ? '<p class="why">' + uwaga + '</p>' : "") +
+      '<p class="why">' + esc(q.why) + '</p>' +
+      '<p class="hook"><b>hak pamięciowy</b>' + esc(q.hook) + '</p>' +
+      '<div class="exam">→ ' + esc(q.ex) + ' <span>(' + n + ' ' + slowa(n) + ')</span></div>' +
+      (cfg.extra || "") +
+      '<button class="next" id="nx">' + (cfg.nextLabel || "Dalej") + '</button>';
+    fb.querySelector("#nx").addEventListener("click", () => cfg.onNext(ok, polowa));
+    fb.scrollIntoView({block:"nearest"});
+  }
+}
+
+/* ---------- ocena wpisanej odpowiedzi ---------- */
+function norm(s){
+  return String(s).toLowerCase()
+    .replace(/ą/g,"a").replace(/ć/g,"c").replace(/ę/g,"e").replace(/ł/g,"l").replace(/ń/g,"n")
+    .replace(/ó/g,"o").replace(/ś/g,"s").replace(/ż/g,"z").replace(/ź/g,"z")
+    .replace(/[^a-z0-9]+/g," ").trim();
+}
+function lev(a, b){
+  const m = [];
+  for (let i = 0; i <= b.length; i++) m[i] = [i];
+  for (let j = 0; j <= a.length; j++) m[0][j] = j;
+  for (let i = 1; i <= b.length; i++)
+    for (let j = 1; j <= a.length; j++)
+      m[i][j] = b[i-1] === a[j-1] ? m[i-1][j-1]
+              : Math.min(m[i-1][j-1] + 1, m[i][j-1] + 1, m[i-1][j] + 1);
+  return m[b.length][a.length];
+}
+/* "trafne" = zapis dokladny (po pominieciu ogonkow i interpunkcji)
+   "prawie" = literowka albo nadmiarowe slowa; liczby musza byc dokladne */
+function ocenWpis(wpis, ok){
+  const w = norm(wpis);
+  if (!w) return "pusto";
+  for (const wzor of ok) if (w === norm(wzor)) return "trafne";
+  for (const wzor of ok){
+    const n = norm(wzor);
+    if (n.length < 6) continue;                        // krotkie i liczby: tylko dokladnie
+    if (lev(w, n) <= 2) return "prawie";
+    if ((w.includes(n) || n.includes(w)) && Math.abs(w.length - n.length) <= 8) return "prawie";
+  }
+  return "blad";
+}
+
+/* ---------- STACJE ---------- */
+function enterStation(cell){
+  const reg = REGIONS[cell.reg], st = reg.stations[cell.idx];
+  const pending = st.q.map((q,i) => i).filter(i => !S.qdone[cell.key + "." + i]);
+  if (!pending.length) return showCard(cell.reg, cell.idx);
+  runStation(cell, pending);
+}
+function runStation(cell, queue){
+  const reg = REGIONS[cell.reg], st = reg.stations[cell.idx];
+  const qi = queue[0], q = st.q[qi];
+  askQuestion({
+    q, hue: reg.hue,
+    eyebrow: reg.emoji + " " + reg.name,
+    title: st.code,
+    sub: esc(st.full) + ' &middot; pytanie ' + (st.q.length - queue.length + 1) + " z " + st.q.length,
+    nextLabel: queue.length > 1 ? "Następne pytanie" : "Zamknij stację",
+    exit:{ tapOut:true, run(odpowiedziano, ok){
+      if (!odpowiedziano) return closeModal();          // wyjscie przed odpowiedzia: pytanie zostaje nietkniete
+      if (ok) S.qdone[cell.key + "." + qi] = true;
+      else pushRepeat(q, reg.emoji + " " + st.code);
+      const left = st.q.map((_,i)=>i).filter(i => !S.qdone[cell.key + "." + i]);
+      if (!left.length) return completeStation(cell);   // ostatnie pytanie zaliczone: stacja musi sie domknac
+      closeModal();
+    }},
+    onNext(ok){
+      if (ok) S.qdone[cell.key + "." + qi] = true;
+      else pushRepeat(q, reg.emoji + " " + st.code);
+      const rest = queue.slice(1).concat(ok ? [] : [qi]);
+      const left = st.q.map((_,i)=>i).filter(i => !S.qdone[cell.key + "." + i]);
+      if (!left.length){ completeStation(cell); return; }
+      if (rest.length > 1 || (rest.length === 1 && ok)) return runStation(cell, rest);
+      closeModal();
+      toast("Zostało " + left.length + " pytań na tej stacji — wróć na kafelek.");
+    }
+  });
+}
+function completeStation(cell){
+  S.done[cell.key] = true;
+  cell.el.classList.add("done");
+  const reg = REGIONS[cell.reg];
+  setRegionHud(cell.reg); hud();
+  const all = reg.stations.every((_, i) => S.done[cell.reg + "." + i]);
+  if (all && !S.boss[cell.reg]){
+    document.getElementById("b" + cell.reg).classList.add("awake");
+    showCard(cell.reg, cell.idx, "Wszystkie stacje krainy zaliczone. " + reg.boss.name + " się przebudził — zejdź na kafelek 👹.");
+  } else {
+    showCard(cell.reg, cell.idx);
+  }
+}
+function showCard(ri, si, note){
+  const reg = REGIONS[ri], st = reg.stations[si], c = st.card;
+  openModal(reg.hue); modal.dataset.dismissible = "1";
+  let dl = '<dl>';
+  dl += '<dt>mierzy</dt><dd>' + esc(c.mierzy) + '</dd>';
+  dl += '<dt>budowa</dt><dd>' + esc(c.budowa) + '</dd>';
+  dl += '<dt>kogo bada</dt><dd>' + esc(c.kto) + '</dd>';
+  if (c.autor) dl += '<dt>autor / teoria</dt><dd>' + esc(c.autor) + '</dd>';
+  dl += '<dt>haczyk</dt><dd class="trap">' + esc(c.hak) + '</dd>';
+  dl += '</dl>';
+  modal.innerHTML =
+    '<div class="eyebrow">✓ karta narzędzia &middot; ' + esc(reg.name) + '</div>' +
+    '<h2>' + esc(st.code) + '</h2>' +
+    '<p class="sub">' + esc(st.full) + '</p>' +
+    '<div class="card">' + dl + '</div>' +
+    (note ? '<p class="hook" style="margin-top:12px"><b>kraina odblokowana</b>' + esc(note) + '</p>' : '') +
+    '<button class="next" id="cl">Wracam na mapę</button>';
+  modal.querySelector("#cl").addEventListener("click", closeModal);
+  S.cardSeen[ri + "." + si] = true;
+}
+function pushRepeat(q, src){
+  if (S.repeat.some(x => x.q === q)) return;
+  S.repeat.push({q, src}); hud();
+}
+
+/* ---------- BOSS ---------- */
+function enterBoss(ri){
+  const reg = REGIONS[ri];
+  if (S.boss[ri]){ bossDefeatedScreen(ri); return; }
+  const left = reg.stations.filter((_, i) => !S.done[ri + "." + i]).length;
+  if (left){ toast(reg.boss.name + " śpi. Zostało " + left + " stacji."); return; }
+  bossIntro(ri);
+}
+function bossIntro(ri){
+  const reg = REGIONS[ri];
+  openModal("var(--bad)"); modal.dataset.dismissible = "1";
+  modal.innerHTML =
+    '<div class="eyebrow" style="color:var(--bad)">👹 boss krainy ' + esc(reg.name) + '</div>' +
+    '<h2>' + esc(reg.boss.name) + '</h2>' +
+    '<p class="sub">Pytania odwrócone: dostajesz opis, zgadujesz narzędzie. ' +
+    'Potrzebujesz <b>5 trafnych</b> odpowiedzi. Masz <b>3 życia</b> — każdy błąd zabiera jedno.</p>' +
+    '<div class="lives">❤️❤️❤️</div>' +
+    '<button class="next" id="go" style="margin-top:14px;background:var(--bad);color:#fff">Stawiam czoła</button>' +
+    '<button class="ghost" id="run">Jeszcze nie teraz</button>';
+  modal.querySelector("#go").addEventListener("click", () => bossFight(ri, {lives:3, hits:0, pool:shuffle(reg.bossQ), i:0}));
+  modal.querySelector("#run").addEventListener("click", closeModal);
+}
+function bossFight(ri, st){
+  const reg = REGIONS[ri];
+  if (st.i >= st.pool.length) st.pool = shuffle(reg.bossQ), st.i = 0;
+  const q = st.pool[st.i++];
+  askQuestion({
+    q, hue:"var(--bad)", tag:"",
+    eyebrow:"👹 " + reg.boss.name,
+    title:"Opis → narzędzie",
+    sub:'<span class="lives">' + "❤️".repeat(st.lives) + "🖤".repeat(3-st.lives) + '</span> &middot; trafione ' + st.hits + "/5",
+    nextLabel:"Dalej",
+    exit:{ label:"Uciekam z walki", run(odpowiedziano, ok){
+      if (odpowiedziano && !ok) pushRepeat(q, "👹 " + reg.boss.name);
+      closeModal();
+      toast("Walka przerwana. " + reg.boss.name + " wraca do pełni sił.");
+    }},
+    onNext(ok){
+      if (ok) st.hits++; else { st.lives--; pushRepeat(q, "👹 " + reg.boss.name); }
+      if (st.hits >= 5) return bossWin(ri);
+      if (st.lives <= 0) return bossLose(ri);
+      bossFight(ri, st);
+    }
+  });
+}
+function bossWin(ri){
+  const reg = REGIONS[ri];
+  S.boss[ri] = true;
+  document.getElementById("b" + ri).classList.remove("awake");
+  document.getElementById("b" + ri).classList.add("slain");
+  const g = document.getElementById("gate" + ri);
+  if (g) g.classList.add("open");
+  const tr = document.getElementById("trophy" + ri);
+  if (tr && REGIONS.every((_, i) => S.boss[i])) tr.classList.add("lit");
+  S.badges["reg" + ri] = true;
+  toast("Odznaka: " + reg.boss.badge);
+  checkBadges(); hud();
+  openModal(reg.hue); modal.dataset.dismissible = "1";
+  const last = ri === REGIONS.length - 1;
+  modal.innerHTML =
+    '<div class="eyebrow">👹 pokonany</div>' +
+    '<h2>' + esc(reg.boss.name) + ' obalony</h2>' +
+    '<p class="sub">Zdobyta odznaka: <b>' + esc(reg.boss.badge) + '</b></p>' +
+    '<p class="why">' + (last
+      ? "To ostatnia kraina. Zejdź na kafelek 🏆 na końcu mapy."
+      : "Brama na południu jest otwarta. Kolejna kraina: <b>" +
+        esc(REGIONS[ri+1].emoji + " " + REGIONS[ri+1].name) + "</b>.") + '</p>' +
+    '<button class="next" id="cl">Idę dalej</button>';
+  modal.querySelector("#cl").addEventListener("click", closeModal);
+}
+function bossLose(ri){
+  const reg = REGIONS[ri];
+  openModal("var(--bad)"); modal.dataset.dismissible = "1";
+  modal.innerHTML =
+    '<div class="eyebrow" style="color:var(--bad)">👹 porażka</div>' +
+    '<h2>Trzy życia stracone</h2>' +
+    '<p class="sub">Pomylone pytania wylądowały w kolejce <b>🔁 Powtórka</b>. Przerób je i wróć na kafelek bossa.</p>' +
+    '<button class="next" id="again" style="background:var(--bad);color:#fff">Jeszcze raz, teraz</button>' +
+    '<button class="ghost" id="cl">Najpierw powtórka</button>';
+  modal.querySelector("#again").addEventListener("click", () => bossFight(ri, {lives:3, hits:0, pool:shuffle(reg.bossQ), i:0}));
+  modal.querySelector("#cl").addEventListener("click", closeModal);
+}
+function bossDefeatedScreen(ri){
+  const reg = REGIONS[ri];
+  openModal(reg.hue); modal.dataset.dismissible = "1";
+  modal.innerHTML =
+    '<div class="eyebrow">🏅 odznaka krainy</div>' +
+    '<h2>' + esc(reg.boss.badge.replace("🏅 ", "")) + '</h2>' +
+    '<p class="sub">' + esc(reg.boss.name) + " leży pokonany. Brama jest otwarta.</p>" +
+    '<button class="next" id="cl">Wracam na mapę</button>';
+  modal.querySelector("#cl").addEventListener("click", closeModal);
+}
+function enterTrophy(){
+  const all = REGIONS.every((_, i) => S.boss[i]);
+  openModal("var(--gold)"); modal.dataset.dismissible = "1";
+  if (!all){
+    const left = REGIONS.filter((_, i) => !S.boss[i]).map(r => r.emoji + " " + r.name);
+    modal.innerHTML = '<div class="eyebrow">🏆</div><h2>Jeszcze nie</h2>' +
+      '<p class="sub">Nietknięci bossowie: ' + esc(left.join(", ")) + '.</p>' +
+      '<button class="next" id="cl">Wracam</button>';
+  } else {
+    modal.innerHTML = '<div class="eyebrow">🏆 koniec mapy</div><h2>Ekspert w terenie</h2>' +
+      '<p class="sub">Sześć krain, ' + TOTAL_ST + ' narzędzi, sześciu bossów.</p>' +
+      '<div class="tot">⭐ XP: <b>' + S.xp + '</b><br>🎯 Trafność: <b>' +
+      (S.total ? Math.round(100*S.correct/S.total) : 0) + '%</b> (' + S.correct + '/' + S.total + ')<br>' +
+      '🔁 W powtórce: <b>' + S.repeat.length + '</b></div>' +
+      '<button class="next" id="cl">Wracam</button>';
+  }
+  modal.querySelector("#cl").addEventListener("click", closeModal);
+}
+
+/* ---------- POWTÓRKA ---------- */
+document.getElementById("btnRep").addEventListener("click", () => {
+  if (!S.repeat.length) return;
+  runRepeat();
+});
+function runRepeat(){
+  if (!S.repeat.length){
+    openModal("var(--ok)"); modal.dataset.dismissible = "1";
+    modal.innerHTML = '<div class="eyebrow">🔁 powtórka</div><h2>Kolejka pusta</h2>' +
+      '<p class="sub">Wszystkie pomylone pytania odrobione.</p>' +
+      '<button class="next" id="cl">Wracam na mapę</button>';
+    modal.querySelector("#cl").addEventListener("click", closeModal);
+    return;
+  }
+  const item = S.repeat[0];
+  askQuestion({
+    q:item.q, hue:"var(--gold)", partial:true,
+    eyebrow:"🔁 powtórka · " + S.repeat.length + " w kolejce",
+    title:"Pytanie, które poszło źle",
+    sub:"pochodzi z: " + esc(item.src),
+    nextLabel:"Dalej",
+    exit:{ tapOut:true, run(odpowiedziano, ok){
+      if (odpowiedziano){
+        if (ok) S.repeat.shift(); else S.repeat.push(S.repeat.shift());
+        hud();
+      }
+      closeModal();
+    }},
+    onNext(ok){
+      if (ok) S.repeat.shift();
+      else { S.repeat.push(S.repeat.shift()); }
+      hud(); runRepeat();
+    }
+  });
+}
+
+/* ---------- PARY DO POMYLENIA ---------- */
+document.getElementById("btnPair").addEventListener("click", () => pairsIntro());
+function pairsIntro(){
+  openModal("var(--c5)"); modal.dataset.dismissible = "1";
+  modal.innerHTML =
+    '<div class="eyebrow">⚖️ pary do pomylenia</div>' +
+    '<h2>Most Pomyłek</h2>' +
+    '<p class="sub">Dziesięć par narzędzi, które na egzaminie podmienia się najczęściej. ' +
+    'Komplet bez błędu daje odznakę 🏅 Rozjemca Par.</p>' +
+    '<button class="next" id="go" style="background:var(--c5);color:#1a0a12">Zaczynam</button>' +
+    '<button class="ghost" id="cl">Nie teraz</button>';
+  modal.querySelector("#go").addEventListener("click", () => runPairs({pool:shuffle(PAIRS), i:0, err:0}));
+  modal.querySelector("#cl").addEventListener("click", closeModal);
+}
+function runPairs(st){
+  if (st.i >= st.pool.length){
+    if (st.err === 0) grant("pary");
+    openModal("var(--c5)"); modal.dataset.dismissible = "1";
+    modal.innerHTML = '<div class="eyebrow">⚖️ most pomyłek</div><h2>' +
+      (st.err === 0 ? "Komplet bez błędu" : "Przejście z " + st.err + " błędami") + '</h2>' +
+      '<p class="sub">' + (st.err === 0
+        ? "Wszystkie dziesięć par rozstrzygniętych poprawnie."
+        : "Pomylone pary trafiły do kolejki 🔁 Powtórka.") + '</p>' +
+      '<button class="next" id="cl" style="background:var(--c5);color:#1a0a12">Wracam na mapę</button>';
+    modal.querySelector("#cl").addEventListener("click", closeModal);
+    return;
+  }
+  const q = st.pool[st.i++];
+  askQuestion({
+    q, hue:"var(--c5)",
+    eyebrow:"⚖️ para " + st.i + " z " + st.pool.length,
+    title:"Rozstrzygnij parę",
+    nextLabel: st.i >= st.pool.length ? "Podsumowanie" : "Następna para",
+    exit:{ label:"Przerywam przegląd par", run(odpowiedziano, ok){
+      if (odpowiedziano && !ok) pushRepeat(q, "⚖️ Most Pomyłek");
+      closeModal();
+    }},
+    onNext(ok){ if (!ok){ st.err++; pushRepeat(q, "⚖️ Most Pomyłek"); } runPairs(st); }
+  });
+}
+
+/* ---------- DYKTANDO: odpowiedzi wpisywane z klawiatury ---------- */
+document.getElementById("btnTxt").addEventListener("click", () => dyktIntro());
+function dyktIntro(){
+  openModal("var(--c4)"); modal.dataset.dismissible = "1";
+  modal.innerHTML =
+    '<div class="eyebrow">&#9000;&#65039; dyktando</div>' +
+    '<h2>Wpisz z pami&#281;ci</h2>' +
+    '<p class="sub">Dziesi&#281;&#263; pyta&#324; bez gotowych opcji &#8212; odpowied&#378; wpisujesz sama, Enter zatwierdza. ' +
+    'Ogonki, wielko&#347;&#263; liter i interpunkcja nie maj&#261; znaczenia.</p>' +
+    '<div class="card"><dl>' +
+    '<dt>&#11088; dok&#322;adnie</dt><dd>+10 XP</dd>' +
+    '<dt>&#11088; liter&#243;wka</dt><dd>+5 XP &#8212; poka&#380;&#281; poprawny zapis</dd>' +
+    '<dt>&#11088; pud&#322;o</dt><dd>0 XP, pytanie l&#261;duje w &#128257; Powt&#243;rce</dd>' +
+    '<dt>&#127941; odznaka</dt><dd>komplet bez b&#322;&#281;du i bez liter&#243;wki</dd>' +
+    '</dl></div>' +
+    '<button class="next" id="go" style="margin-top:14px;background:var(--c4);color:#08201a">Zaczynam</button>' +
+    '<button class="ghost" id="cl">Nie teraz</button>';
+  modal.querySelector("#go").addEventListener("click", () => runDykt({pool:shuffle(DYKT).slice(0,10), i:0, err:0, pol:0}));
+  modal.querySelector("#cl").addEventListener("click", closeModal);
+}
+function runDykt(st){
+  if (st.i >= st.pool.length){
+    const czysto = st.err === 0 && st.pol === 0;
+    if (czysto) grant("dykt");
+    openModal("var(--c4)"); modal.dataset.dismissible = "1";
+    modal.innerHTML =
+      '<div class="eyebrow">&#9000;&#65039; dyktando</div>' +
+      '<h2>' + (czysto ? "Komplet, co do litery" : "Runda sko&#324;czona") + '</h2>' +
+      '<div class="tot">&#9989; dok&#322;adnie: <b>' + (st.pool.length - st.err - st.pol) + '</b><br>' +
+      '&#9998; z liter&#243;wk&#261;: <b>' + st.pol + '</b><br>' +
+      '&#10060; pud&#322;a: <b>' + st.err + '</b></div>' +
+      (st.err ? '<p class="sub" style="margin-top:10px">Pomylone wpad&#322;y do kolejki &#128257; Powt&#243;rka.</p>' : '') +
+      '<button class="next" id="cl" style="margin-top:12px;background:var(--c4);color:#08201a">Wracam na map&#281;</button>';
+    modal.querySelector("#cl").addEventListener("click", closeModal);
+    return;
+  }
+  const q = st.pool[st.i++];
+  askQuestion({
+    q, hue:"var(--c4)",
+    eyebrow:"\u2328\ufe0f dyktando \u00b7 " + st.i + " z " + st.pool.length,
+    title:"Wpisz odpowied\u017a",
+    nextLabel: st.i >= st.pool.length ? "Podsumowanie" : "Nast\u0119pne",
+    exit:{ label:"Przerywam dyktando", run(odpowiedziano, ok){
+      if (odpowiedziano && !ok) pushRepeat(q, "\u2328\ufe0f Dyktando");
+      closeModal();
+    }},
+    onNext(ok, polowa){
+      if (!ok){ st.err++; pushRepeat(q, "\u2328\ufe0f Dyktando"); }
+      else if (polowa) st.pol++;
+      runDykt(st);
+    }
+  });
+}
+
+/* ---------- KODEKS ---------- */
+document.getElementById("btnIdx").addEventListener("click", () => {
+  openModal("var(--c1)"); modal.dataset.dismissible = "1";
+  let h = '<div class="eyebrow">📖 kodeks diagnosty</div><h2>Karty narzędzi</h2>' +
+    '<p class="sub">Karta otwiera się po zaliczeniu stacji. Zaliczone: <b>' +
+    Object.keys(S.done).length + " z " + TOTAL_ST + '</b>.</p>';
+  h += '<div class="badges">' + BADGES.map(b =>
+        '<span class="badge' + (S.badges[b.id] ? " got" : "") + '" title="' + esc(b.d) + '">' +
+        esc(b.t) + '</span>').join("") +
+       REGIONS.map((r,i) => BADGES.some(b => b.t === r.boss.badge) ? "" :
+        '<span class="badge' + (S.boss[i] ? " got" : "") + '">' +
+        esc(r.boss.badge) + '</span>').join("") + '</div>';
+  REGIONS.forEach((reg, ri) => {
+    h += '<div class="rgroup" style="--hue:' + reg.hue + '">' + esc(reg.emoji + " " + reg.name) + '</div><div class="idx">';
+    reg.stations.forEach((st, si) => {
+      const open = !!S.done[ri + "." + si];
+      h += '<button class="idxr' + (open ? "" : " locked") + '" style="--hue:' + reg.hue + '"' +
+           (open ? ' data-r="' + ri + '" data-s="' + si + '"' : " disabled") + '>' +
+           '<code>' + esc(st.code) + '</code><span>' + (open ? esc(st.full) : "— zablokowana —") + '</span></button>';
+    });
+    h += '</div>';
+  });
+  h += '<button class="next" id="cl" style="margin-top:14px">Wracam na mapę</button>';
+  modal.innerHTML = h;
+  modal.querySelectorAll(".idxr[data-r]").forEach(b =>
+    b.addEventListener("click", () => showCard(+b.dataset.r, +b.dataset.s)));
+  modal.querySelector("#cl").addEventListener("click", closeModal);
+});
+
+/* ---------- start ---------- */
+drawMap();
+layout();
+window.addEventListener("resize", layout);
+setRegionHud(0);
+hud();
+
+openModal(REGIONS[0].hue); modal.dataset.dismissible = "1";
+modal.innerHTML =
+  '<div class="eyebrow">narzędzia diagnostyczne &middot; termin II</div>' +
+  '<h2>Kraina Narzędzi Diagnostycznych</h2>' +
+  '<p class="sub">Sześć krain, ' + TOTAL_ST + ' narzędzi z pliku „Testy.pdf”. ' +
+  'Chodzisz strzałkami albo D-padem. Wejście na kafelek z akronimem otwiera pytanie a/b/c. ' +
+  'Zaliczone stacje gasną, a gdy zgaśnie cała kraina — budzi się boss.</p>' +
+  '<div class="card"><dl>' +
+  '<dt>⭐ XP</dt><dd>+10 za trafną, +5 za odrobioną powtórkę, 0 za błąd</dd>' +
+  '<dt>🔥 seria</dt><dd>3 trafne pod rząd podwajają punkty; błąd zeruje serię</dd>' +
+  '<dt>👹 boss</dt><dd>opis → zgadnij narzędzie, 5 trafień, 3 życia</dd>' +
+  '<dt>⚖️ pary</dt><dd>osobny tryb: 10 par podmienianych na egzaminie</dd>' +
+  '</dl></div>' +
+  '<button class="next" id="cl">Wchodzę do Krainy Prób Zadaniowych</button>';
+modal.querySelector("#cl").addEventListener("click", closeModal);
+</script>
